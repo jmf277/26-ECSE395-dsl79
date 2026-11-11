@@ -25,7 +25,7 @@ INPUT_BYTES = 224 * 224 * 3
 
 
 def valid_command(command):
-    return bool(re.fullmatch(r"CAPTURE [1-9][0-9]{0,2}|MODE (MANUAL|PIR)|LIGHT (AMBIENT|WHITE)|TEST OUTPUT|ARM|DISARM|STOP|STATUS", command)) and not (
+    return bool(re.fullmatch(r"CAPTURE [1-9][0-9]{0,2}|MODE (MANUAL|PIR)|LIGHT (AMBIENT|WHITE)|TEST OUTPUT|INJECT DEER|ARM|DISARM|STOP|STATUS", command)) and not (
         command.startswith("CAPTURE ") and int(command[8:]) > 600)
 
 
@@ -121,6 +121,7 @@ class Receiver:
         self.buffer = bytearray()
         self.frames = {}
         self.output_tests = {}
+        self.injections = {}
         self.pending = None
         self.errors = []
         self.closed = False
@@ -185,6 +186,30 @@ class Receiver:
                     raise ValueError("orphan/duplicate output-test ending")
                 self.output_tests[key]["end"] = item
             self.emit(output_test=item)
+            return
+        if text.startswith("INJECTION "):
+            item = load_json(text[len("INJECTION "):])
+            if (type(item.get("schema")) is not int or item["schema"] != 1
+                    or not isinstance(item.get("boot"), str) or not re.fullmatch(r"[0-9a-f]{16}", item["boot"])
+                    or type(item.get("injection")) is not int or not 1 <= item["injection"] <= 0xffffffff
+                    or item.get("event") not in ("started", "completed", "cancelled")
+                    or item.get("detection") != "confirmed_deer" or item.get("source") != "usb_command"
+                    or type(item.get("alarm_start_us")) is not int or item["alarm_start_us"] < 0
+                    or (item["event"] != "started" and item.get("ended_us") is not None and type(item["ended_us"]) is not int)
+                    or (item["event"] == "completed" and type(item.get("ended_us")) is not int)):
+                raise ValueError("invalid injected-detection event")
+            key = item["boot"], item["injection"]
+            if item["event"] == "started":
+                if key in self.injections:
+                    raise ValueError("duplicate injected-detection start")
+                self.injections[key] = {"start": item, "end": None}
+            else:
+                if key not in self.injections or self.injections[key]["end"] is not None:
+                    raise ValueError("orphan/duplicate injected-detection ending")
+                if item["alarm_start_us"] != self.injections[key]["start"]["alarm_start_us"]:
+                    raise ValueError("injected-detection ending names another alarm start")
+                self.injections[key]["end"] = item
+            self.emit(injection=item)
             return
         if text.startswith("TRIAL_DATA "):
             parts = text.split()
@@ -303,6 +328,9 @@ class Receiver:
         for (boot, test), row in self.output_tests.items():
             if row["end"] is None:
                 self.error(f"output test lacks terminal event: {boot}/{test}")
+        for (boot, number), row in self.injections.items():
+            if row["end"] is None:
+                self.error(f"injected detection lacks terminal event: {boot}/{number}")
         summary = {
             "schema": 1, "frames": len(self.frames),
             "complete_valid_pairs": sum(row["complete"] and row["result"]["valid"] for row in self.frames.values()),
@@ -312,6 +340,10 @@ class Receiver:
             "output_tests_completed": sum(bool(row["end"] and row["end"]["event"] == "completed") for row in self.output_tests.values()),
             "output_tests_cancelled": sum(bool(row["end"] and row["end"]["event"] == "cancelled") for row in self.output_tests.values()),
             "output_tests_incomplete": sum(row["end"] is None for row in self.output_tests.values()),
+            "injections_started": len(self.injections),
+            "injections_completed": sum(bool(row["end"] and row["end"]["event"] == "completed") for row in self.injections.values()),
+            "injections_cancelled": sum(bool(row["end"] and row["end"]["event"] == "cancelled") for row in self.injections.values()),
+            "injections_incomplete": sum(row["end"] is None for row in self.injections.values()),
             "errors": self.errors,
             "scope": "Image/input transfer and reported inference/commands; not physical-output verification or recognition accuracy."
         }
@@ -336,8 +368,16 @@ class Receiver:
             outcome = row["end"]["event"] if row["end"] else "terminal event not received"
             output_cards.append(f'<li>Boot {boot}, output test {test}: {outcome}</li>')
         output_section = '<h2>Independent output tests</h2><p>These commands exercise the light/buzzer without a recognition verdict. Completion is the reported controller state; record physical observations separately.</p><ul>' + ''.join(output_cards) + '</ul>' if output_cards else ''
+        injection_cards = []
+        for (boot, number), row in self.injections.items():
+            end = row["end"]
+            outcome = end["event"] if end else "terminal event not received"
+            if end and end.get("ended_us") is not None:
+                outcome += f" after {(end['ended_us'] - end['alarm_start_us']) / 1e6:.3f} s"
+            injection_cards.append(f'<li>Boot {boot}, injected detection {number}: {html.escape(outcome)}</li>')
+        injection_section = '<h2>Injected detections</h2><p>INJECT DEER puts a confirmed deer detection into the armed controller, which starts the light/buzzer through the decision path with no picture taken. Completion is the reported controller state; record physical observations separately.</p><ul>' + ''.join(injection_cards) + '</ul>' if injection_cards else ''
         page = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Recognition trials</title><style>body{font:16px/1.5 system-ui;max-width:1100px;margin:24px auto;padding:0 20px;color:#18252c}article{border-top:1px solid #ccc;padding:20px 0}article div{display:flex;flex-wrap:wrap;gap:20px}figure{margin:0;max-width:480px}img{max-width:100%;image-rendering:auto}h2{font-size:19px}</style><h1>Recorded recognition trials</h1><p>The original JPEG and exact signed INT8 input are paired with the device result. The input preview dequantizes the retained tensor for display; the .input.i8 file is authoritative. Transfer time is separate from inference time. Alarm commands do not measure actual sound/light, and correlated frames are not independent animal trials.</p><p><a href="summary.json">Recording summary</a> · <a href="events.jsonl">Events and markers</a></p>'
-        (self.root / "index.html").write_text(page + output_section + "".join(cards) + "</html>\n", encoding="utf-8")
+        (self.root / "index.html").write_text(page + output_section + injection_section + "".join(cards) + "</html>\n", encoding="utf-8")
 
 
 def main(argv=None):
@@ -359,6 +399,8 @@ def main(argv=None):
             print(row["device_message"])
         elif "output_test" in row:
             print("Independent output test:", row["output_test"])
+        elif "injection" in row:
+            print("Injected detection:", row["injection"])
         elif "recorder_error" in row:
             print("RECORDING ERROR:",row["recorder_error"])
     receiver = Receiver(args.output, on_event=None if args.replay else report)
@@ -383,7 +425,7 @@ def main(argv=None):
                 except EOFError:
                     pending.put("QUIT")
             threading.Thread(target=console, daemon=True).start()
-            print("Commands: CAPTURE 1..600, MODE MANUAL, MODE PIR, LIGHT AMBIENT, LIGHT WHITE, TEST OUTPUT, ARM, DISARM, STOP, STATUS")
+            print("Commands: CAPTURE 1..600, MODE MANUAL, MODE PIR, LIGHT AMBIENT, LIGHT WHITE, TEST OUTPUT, INJECT DEER, ARM, DISARM, STOP, STATUS")
             print("MARK description writes a local marker; QUIT sends STOP and closes recording. Boot is manual/disarmed.")
             device.write(b"STATUS\n")
             try:

@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -85,6 +86,40 @@ class RecordingTests(unittest.TestCase):
         r,_,s=self.record(self.output_event('completed'));self.assertTrue(r.errors);self.assertEqual(s['output_tests_completed'],0)
         r,_,s=self.record(self.output_event('started')*2+self.output_event('cancelled')*2)
         self.assertTrue(r.errors);self.assertEqual(s['output_tests_started'],1)
+    def injection_event(self,event,number=1,start=5000000,ended=None,**extra):
+        item=dict(schema=1,boot='0123456789abcdef',injection=number,event=event,detection='confirmed_deer',source='usb_command',alarm_start_us=start,observed_us=start+20000)
+        if event!='started':item['ended_us']=ended
+        item.update(extra)
+        return ('INJECTION '+json.dumps(item)+'\n').encode()
+    def test_injected_detection_is_recorded_apart_from_frames(self):
+        r,root,s=self.record(self.injection_event('started')+self.injection_event('completed',ended=10500000))
+        self.assertFalse(r.errors);self.assertEqual(s['frames'],0);self.assertEqual(s['complete_valid_pairs'],0)
+        self.assertEqual(s['injections_started'],1);self.assertEqual(s['injections_completed'],1);self.assertEqual(s['output_tests_started'],0)
+        page=(root/'index.html').read_text();self.assertIn('Injected detections',page);self.assertIn('completed after 5.500 s',page)
+        rows=[json.loads(x) for x in (root/'events.jsonl').read_text().splitlines()]
+        self.assertEqual([row['injection']['event'] for row in rows if 'injection' in row],['started','completed'])
+    def test_injection_cancellation_and_missing_terminal(self):
+        r,_,s=self.record(self.injection_event('started')+self.injection_event('cancelled'))
+        self.assertFalse(r.errors);self.assertEqual(s['injections_cancelled'],1);self.assertEqual(s['injections_completed'],0)
+        r,_,s=self.record(self.injection_event('started'))
+        self.assertTrue(r.errors);self.assertEqual(s['injections_incomplete'],1)
+    def test_orphan_duplicate_and_malformed_injection_events(self):
+        r,_,s=self.record(self.injection_event('completed',ended=10500000));self.assertTrue(r.errors);self.assertEqual(s['injections_started'],0)
+        r,_,s=self.record(self.injection_event('started')*2);self.assertTrue(r.errors);self.assertEqual(s['injections_started'],1)
+        r,_,s=self.record(self.injection_event('started')+self.injection_event('completed',ended=None));self.assertTrue(r.errors);self.assertEqual(s['injections_completed'],0)
+        r,_,s=self.record(self.injection_event('started')+self.injection_event('completed',start=1,ended=10500000));self.assertTrue(r.errors);self.assertEqual(s['injections_completed'],0)
+        r,_,s=self.record(self.injection_event('started',detection='deer'));self.assertTrue(r.errors);self.assertEqual(s['injections_started'],0)
+    def test_firmware_injection_lines_parse(self):
+        # Fill the trial program's own INJECTION format strings and feed the result.
+        source=(Path(__file__).resolve().parents[1]/'experiments/deer-classifier/src/app_main.cpp').read_text()
+        formats=[m.group(1).encode().decode('unicode_escape') for m in re.finditer(r'line\("(INJECTION [^"\\]*(?:\\.[^"\\]*)*)"',source)]
+        self.assertEqual(len(formats),2)
+        started=formats[0].replace('%s','0123456789abcdef',1).replace('%u','1').replace('%lld','5000000',1).replace('%lld','5020000',1)
+        ended=formats[1].replace('%s','0123456789abcdef',1).replace('%u','1').replace('%s','completed',1).replace('%lld','5000000',1).replace('%s','10500000',1).replace('%lld','10520000',1)
+        cancelled=formats[1].replace('%s','0123456789abcdef',1).replace('%u','2').replace('%s','cancelled',1).replace('%lld','6000000',1).replace('%s','null',1).replace('%lld','6020000',1)
+        started2=started.replace('"injection":1','"injection":2').replace('5000000','6000000')
+        r,_,s=self.record((started+'\n'+ended+'\n'+started2+'\n'+cancelled+'\n').encode())
+        self.assertFalse(r.errors);self.assertEqual(s['injections_completed'],1);self.assertEqual(s['injections_cancelled'],1)
     def test_lighting_is_recorded_and_validated(self):
         raw,_,_=fixture();raw=raw.replace(b'"lighting": "ambient"',b'"lighting": "white"')
         r,root,s=self.record(raw);self.assertFalse(r.errors);self.assertEqual(s['complete_valid_pairs'],1)
@@ -92,9 +127,9 @@ class RecordingTests(unittest.TestCase):
         r,_,s=self.record(raw.replace(b'"capture_lighting_ok": true',b'"capture_lighting_ok": false'))
         self.assertTrue(r.errors);self.assertEqual(s['complete_valid_pairs'],0)
     def test_command_boundaries(self):
-        for text in ['LIGHT AMBIENT','LIGHT WHITE','TEST OUTPUT','CAPTURE 600','MODE PIR','STOP']:
+        for text in ['LIGHT AMBIENT','LIGHT WHITE','TEST OUTPUT','INJECT DEER','CAPTURE 600','MODE PIR','STOP']:
             self.assertTrue(valid_command(text),text)
-        for text in ['TEST','TEST OUTPUT extra','TEST  OUTPUT','LIGHT BLUE','CAPTURE 601','CAPTURE 0','LIGHT WHITE\nARM']:
+        for text in ['TEST','TEST OUTPUT extra','TEST  OUTPUT','LIGHT BLUE','CAPTURE 601','CAPTURE 0','LIGHT WHITE\nARM','INJECT','INJECT DEER now','INJECT  DEER','inject deer']:
             self.assertFalse(valid_command(text),text)
 
 if __name__=='__main__':unittest.main()
