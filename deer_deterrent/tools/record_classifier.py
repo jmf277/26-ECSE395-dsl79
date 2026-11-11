@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import csv
 import hashlib
 import html
 import io
@@ -134,8 +135,11 @@ def box_problem(item):
 
 class Receiver:
     """Strict streaming parser. Partial/invalid transfers never become complete trials."""
-    def __init__(self, root, on_event=None):
+    def __init__(self, root, on_event=None, context=None):
         self.root = Path(root)
+        self.context = context or {}  # label and notes shown in the gallery
+        self.timeline = []  # frame keys and markers in the order they arrived
+        self.boots = {}     # boot identifier -> firmware identity from its BOOT line
         self.raw = (self.root / "serial.raw").open("xb")
         self.events = (self.root / "events.jsonl").open("x", encoding="utf-8")
         self.buffer = bytearray()
@@ -165,6 +169,13 @@ class Receiver:
     def warn(self, message):
         self.warnings.append(message)
         self.emit(recorder_warning=message)
+
+    def mark(self, text):
+        """An operator marker, tied to the frame received just before it."""
+        last = next((entry[1] for entry in reversed(self.timeline) if entry[0] == "frame"), None)
+        after = self.frames[last]["stem"] if last else None
+        self.timeline.append(("marker", text, after))
+        self.emit(marker=text, after_frame=after)
 
     def transfer_open(self):
         """True while a blob or a frame without its TRIAL_END is outstanding."""
@@ -326,6 +337,7 @@ class Receiver:
                 raise ValueError("duplicate result identity")
             stem = f"{key[0]}-trial-{item['trial']:06d}-frame-{key[1]:06d}"
             self.frames[key] = {"stem": stem, "result": item, "artifacts": {}, "ended": False, "complete": False}
+            self.timeline.append(("frame", key))
             problem = box_problem(item)
             if problem:
                 self.frames[key]["warning"] = problem
@@ -358,6 +370,14 @@ class Receiver:
         if text.startswith("BOOT ") and self.pending is not None:
             self.error("device reboot interrupted blob")
             self.pending = None
+        if text.startswith("BOOT "):
+            boot = re.search(r"\bboot=([0-9a-f]{16})\b", text)
+            firmware = text.split(" firmware=", 1)[1] if " firmware=" in text else None
+            if boot:
+                try:
+                    self.boots[boot.group(1)] = load_json(firmware) if firmware else None
+                except ValueError:
+                    self.boots[boot.group(1)] = None
         if text.startswith("TRIAL_STATUS "):
             try:
                 self.status_replies.append(load_json(text[len("TRIAL_STATUS "):]))
@@ -427,27 +447,87 @@ class Receiver:
             "injections_completed": sum(bool(row["end"] and row["end"]["event"] == "completed") for row in self.injections.values()),
             "injections_cancelled": sum(bool(row["end"] and row["end"]["event"] == "cancelled") for row in self.injections.values()),
             "injections_incomplete": sum(row["end"] is None for row in self.injections.values()),
+            "trials": self.trials(),
             "errors": self.errors,
             "warnings": self.warnings,
             "device_diagnostics": self.diagnostics,
             "scope": "Image/input transfer and reported inference/commands; not physical-output verification or recognition accuracy."
         }
         (self.root / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+        with (self.root / "trials.csv").open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=self.TRIAL_COLUMNS)
+            writer.writeheader()
+            writer.writerows(summary["trials"])
         self.gallery()
         self.raw.close();self.events.close();self.closed = True
 
-    def gallery(self):
-        cards = []
+    TRIAL_COLUMNS = ["boot", "trial", "trigger", "armed", "lighting", "recording", "frames", "valid_frames", "invalid_frames",
+                     "max_score", "frames_at_threshold", "confirmed", "alarm_started", "first_started_us", "last_inferred_us"]
+
+    def trials(self):
+        """One row per trial, from the frame records in arrival order."""
+        rows = {}
         for row in self.frames.values():
-            result, stem = row["result"], row["stem"]
-            images = []
-            if "jpeg" in row["artifacts"]:
-                images.append(f'<figure><img src="{stem}.jpg" alt="Original camera JPEG"><figcaption>Original camera JPEG</figcaption></figure>')
-            if "input" in row["artifacts"]:
-                images.append(f'<figure><img src="{stem}.input-preview.png" alt="Model input preview"><figcaption>Dequantized 224×224 input preview</figcaption></figure>')
-            title = f"Trial {result['trial']}, frame {result['within']} — score {result['score']}, confirmed {result['present']}"
-            lighting = html.escape(result.get("lighting", "not recorded"))
-            cards.append(f'<article><h2>{html.escape(title)}</h2><p>Capture lighting: {lighting}; transfer complete: {row["complete"]}; committed: {result["committed"]}; recognition alarm commanded: {result["alarm_started"]}</p><div>{"".join(images)}</div><a href="{stem}.json">Result and detected boxes</a> · <a href="{stem}.received.json">Transfer verification</a></article>')
+            r = row["result"]
+            t = rows.setdefault((r["boot"], r["trial"]), dict(
+                boot=r["boot"], trial=r["trial"], trigger=r["trigger"], armed=r["armed"],
+                lighting=r.get("lighting", "not recorded"), recording=r.get("recording", "full"),
+                frames=0, valid_frames=0, invalid_frames=0, max_score=None, frames_at_threshold=0,
+                confirmed=False, alarm_started=False, first_started_us=r.get("started_us"), last_inferred_us=None))
+            t["frames"] += 1
+            if r["valid"]:
+                t["valid_frames"] += 1
+                t["max_score"] = r["score"] if t["max_score"] is None else max(t["max_score"], r["score"])
+                t["frames_at_threshold"] += r["score"] >= r.get("threshold", 2)
+            else:
+                t["invalid_frames"] += 1
+            t["confirmed"] |= r["present"]
+            t["alarm_started"] |= r["alarm_started"]
+            t["last_inferred_us"] = r.get("inferred_us")
+        return list(rows.values())
+
+    def frame_card(self, row):
+        r, stem = row["result"], row["stem"]
+        width, height = r.get("camera_width") or 1, r.get("camera_height") or 1
+        figures = []
+        if "jpeg" in row["artifacts"]:
+            boxes = []
+            for box in r.get("boxes", []) if isinstance(r.get("boxes"), list) else []:
+                try:
+                    x1, y1, x2, y2 = box["box"]
+                    style = (f"left:{100 * x1 / width:.2f}%;top:{100 * y1 / height:.2f}%;"
+                             f"width:{100 * (x2 - x1 + 1) / width:.2f}%;height:{100 * (y2 - y1 + 1) / height:.2f}%")
+                    boxes.append(f'<div class="box" style="{style}"><span>{float(box["score"]):.3f}</span></div>')
+                except (KeyError, TypeError, ValueError):
+                    continue
+            figures.append(f'<figure><div class="image"><img src="{stem}.jpg" alt="Camera JPEG of frame {r["frame"]}">{"".join(boxes)}</div>'
+                           f'<figcaption>Camera JPEG, unchanged; outlines show the {len(boxes)} detection box(es) of the record with their scores</figcaption></figure>')
+        if "input" in row["artifacts"]:
+            figures.append(f'<figure><img src="{stem}.input-preview.png" alt="Model input preview"><figcaption>Dequantized 224×224 model input preview</figcaption></figure>')
+        parts = [f"{label} {r[key] / 1000:.0f} ms" for label, key in (("capture", "capture_us"), ("decode", "decode_us"), ("model", "model_us")) if isinstance(r.get(key), (int, float))]
+        if row.get("ending") and isinstance(row["ending"].get("transfer_us"), (int, float)):
+            parts.append(f"transfer {row['ending']['transfer_us'] / 1000:.0f} ms")
+        timing = ("Timing: " + ", ".join(parts) + ".") if parts else ""
+        score = "none (invalid frame)" if r["score"] is None else f"{r['score']:.4f}"
+        title = f"Trial {r['trial']}, frame {r['frame']} ({r['within']} of the trial)"
+        facts = (f"Trigger {html.escape(r['trigger'])}; armed {r['armed']}; lighting {html.escape(r.get('lighting', 'not recorded'))}; "
+                 f"recording {html.escape(r.get('recording', 'full'))}. Score {score}; confirmed {r['present']}; committed {r['committed']}; "
+                 f"alarm commanded {r['alarm_started']}. {html.escape(timing)}")
+        problems = [p for p in (r.get("error"), row.get("warning")) if p]
+        if row.get("cancelled"):
+            problems.append("transfer cancelled")
+        elif not row["complete"]:
+            problems.append("transfer incomplete")
+        problem_text = f'<p class="problem">{html.escape("; ".join(problems))}</p>' if problems else ""
+        return (f'<article><h2>{html.escape(title)}</h2><p>{facts}</p>{problem_text}<div class="figures">{"".join(figures)}</div>'
+                f'<a href="{stem}.json">Frame record</a> · <a href="{stem}.received.json">Transfer verification</a></article>')
+
+    def gallery(self):
+        trials = self.trials()
+        head = "".join(f"<th>{html.escape(c.replace('_', ' '))}</th>" for c in self.TRIAL_COLUMNS)
+        body = "".join("<tr>" + "".join(f"<td>{html.escape(str(t[c]))}</td>" for c in self.TRIAL_COLUMNS) + "</tr>" for t in trials)
+        trial_section = (f'<h2>Trials</h2><p>Also in <a href="trials.csv">trials.csv</a>. Frames within a trial are consecutive looks at one scene, '
+                         f'not independent trials.</p><table><tr>{head}</tr>{body}</table>') if trials else ""
         output_cards = []
         for (boot, test), row in self.output_tests.items():
             outcome = row["end"]["event"] if row["end"] else "terminal event not received"
@@ -461,8 +541,31 @@ class Receiver:
                 outcome += f" after {(end['ended_us'] - end['alarm_start_us']) / 1e6:.3f} s"
             injection_cards.append(f'<li>Boot {boot}, injected detection {number}: {html.escape(outcome)}</li>')
         injection_section = '<h2>Injected detections</h2><p>INJECT DEER puts a confirmed deer detection into the armed controller, which starts the light/buzzer through the decision path with no picture taken. Completion is the reported controller state; record physical observations separately.</p><ul>' + ''.join(injection_cards) + '</ul>' if injection_cards else ''
-        page = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Recognition trials</title><style>body{font:16px/1.5 system-ui;max-width:1100px;margin:24px auto;padding:0 20px;color:#18252c}article{border-top:1px solid #ccc;padding:20px 0}article div{display:flex;flex-wrap:wrap;gap:20px}figure{margin:0;max-width:480px}img{max-width:100%;image-rendering:auto}h2{font-size:19px}</style><h1>Recorded recognition trials</h1><p>The original JPEG and exact signed INT8 input are paired with the device result. The input preview dequantizes the retained tensor for display; the .input.i8 file is authoritative. Transfer time is separate from inference time. Alarm commands do not measure actual sound/light, and correlated frames are not independent animal trials.</p><p><a href="summary.json">Recording summary</a> · <a href="events.jsonl">Events and markers</a></p>'
-        (self.root / "index.html").write_text(page + output_section + injection_section + "".join(cards) + "</html>\n", encoding="utf-8")
+        timeline = []
+        for entry in self.timeline:
+            if entry[0] == "frame":
+                timeline.append(self.frame_card(self.frames[entry[1]]))
+            else:
+                timeline.append(f'<p class="marker">Marker: {html.escape(entry[1])}</p>')
+        context = "".join(f"<p><b>{html.escape(k.capitalize())}:</b> {html.escape(str(v))}</p>" for k, v in self.context.items() if v)
+        problems = ""
+        if self.errors or self.warnings:
+            items = "".join(f"<li>{html.escape(m)}</li>" for m in self.errors + self.warnings)
+            problems = f'<h2>Recording errors and warnings</h2><ul>{items}</ul>'
+        style = ('body{font:16px/1.5 system-ui;max-width:1100px;margin:24px auto;padding:0 20px;color:#18252c}'
+                 'article{border-top:1px solid #ccc;padding:20px 0}.figures{display:flex;flex-wrap:wrap;gap:20px}'
+                 'figure{margin:0;max-width:480px}img{max-width:100%;display:block}h2{font-size:19px}'
+                 '.image{position:relative;line-height:0}.box{position:absolute;border:2px solid #e8590c;box-sizing:border-box}'
+                 '.box span{position:absolute;left:0;top:0;background:#e8590c;color:#fff;font:12px/1.3 system-ui;padding:0 3px}'
+                 'table{border-collapse:collapse;font-size:14px}td,th{border:1px solid #ccc;padding:2px 6px;text-align:left}'
+                 '.marker{background:#f1f3f5;padding:6px 10px}.problem{color:#b00020}')
+        page = (f'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">'
+                f'<title>Recognition trials</title><style>{style}</style><h1>Recorded recognition trials</h1>{context}'
+                '<p>Each frame card pairs the camera JPEG the model scored with its device record and, when it was sent, the exact signed INT8 model input. '
+                'The input preview dequantizes the retained tensor for display; the .input.i8 file is authoritative. Box outlines are drawn by this page over the unchanged JPEG. '
+                'Transfer time is separate from inference time. Alarm commands do not measure actual sound/light.</p>'
+                '<p><a href="summary.json">Recording summary</a> · <a href="events.jsonl">Events and markers</a> · <a href="run_manifest.json">Manifest</a></p>')
+        (self.root / "index.html").write_text(page + problems + trial_section + output_section + injection_section + "".join(timeline) + "</html>\n", encoding="utf-8")
 
 
 def main(argv=None):
@@ -472,6 +575,8 @@ def main(argv=None):
     source.add_argument("--replay", type=Path, help="Reconstruct a recording from an existing serial.raw")
     parser.add_argument("--output", type=Path, required=True, help="New session directory; must not already exist")
     parser.add_argument("--baud", type=int, default=115200)
+    parser.add_argument("--label", default="", help="short name of the session, such as the print and distance")
+    parser.add_argument("--notes", default="", help="setup notes kept in the manifest and gallery")
     parser.add_argument("--keep-state", action="store_true",
                         help="record the device's state at the start without sending STOP")
     parser.add_argument("--drain-seconds", type=float, default=30.0,
@@ -502,9 +607,10 @@ def main(argv=None):
             print("RECORDING ERROR:",row["recorder_error"])
         elif "recorder_warning" in row:
             print("Recording warning:",row["recorder_warning"])
-    receiver = Receiver(args.output, on_event=None if args.replay else report)
-    manifest = {"schema": 1, "started_utc": utc(), "source": str(args.replay) if args.replay else args.port,
-                "recorder_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "state": "open"}
+    receiver = Receiver(args.output, on_event=None if args.replay else report, context=dict(label=args.label, notes=args.notes))
+    manifest = {"schema": 2, "started_utc": utc(), "source": str(args.replay) if args.replay else args.port,
+                "recorder_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "state": "open",
+                "label": args.label, "notes": args.notes}
     manifest_path = args.output / "run_manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     close = "normal"
@@ -563,7 +669,7 @@ def main(argv=None):
                     if command == "QUIT":
                         break
                     if command.startswith("MARK "):
-                        receiver.emit(marker=command[5:]);continue
+                        receiver.mark(command[5:]);continue
                     if not valid_command(command):
                         print("Invalid command; nothing sent.");continue
                     send(command)
@@ -593,7 +699,12 @@ def main(argv=None):
                 pass
     finally:
         receiver.finish()
-        manifest.update(state="closed", close=close, ended_utc=utc())
+        # Close the manifest with the firmware seen and a hash of every saved file.
+        artifacts = {path.name: {"bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+                     for path in sorted(args.output.iterdir()) if path.is_file() and path.name != "run_manifest.json"}
+        models = sorted({row["result"]["model_sha256"] for row in receiver.frames.values()})
+        manifest.update(state="closed", close=close, ended_utc=utc(), firmware=receiver.boots,
+                        model_sha256=models, artifacts=artifacts)
         manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     print(args.output / "index.html")
     return 1 if receiver.errors else 0

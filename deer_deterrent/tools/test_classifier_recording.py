@@ -1,4 +1,6 @@
 import base64
+import csv
+import hashlib
 import io
 import json
 import re
@@ -76,20 +78,24 @@ def serial_module(port):
     module.Serial=factory
     return module
 
+def run_live(test,port,commands,*extra,hold=0.0):
+    """Runs record_classifier.main() over a stand-in port with scripted console input."""
+    temp=tempfile.TemporaryDirectory();test.addCleanup(temp.cleanup)
+    out=Path(temp.name)/'session';queue=list(commands)
+    def console():
+        if queue:
+            time.sleep(0.05);return queue.pop(0)
+        time.sleep(hold)
+        raise EOFError
+    with mock.patch.dict(sys.modules,{'serial':serial_module(port)}),mock.patch('builtins.input',console),mock.patch('builtins.print'):
+        code=record_classifier.main(['--port','fake','--output',str(out),'--quiet-seconds','0.2','--drain-seconds','5',*extra])
+    rows=[json.loads(x) for x in (out/'events.jsonl').read_text().splitlines()]
+    return code,out,rows,json.loads((out/'run_manifest.json').read_text()),json.loads((out/'summary.json').read_text())
+
 class LiveRecorderTests(unittest.TestCase):
     """main() over a stand-in port: start state, a lost port, QUIT and the serial import."""
     def run_main(self,port,commands,*extra,hold=0.0):
-        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
-        out=Path(temp.name)/'session';queue=list(commands)
-        def console():
-            if queue:
-                time.sleep(0.05);return queue.pop(0)
-            time.sleep(hold)
-            raise EOFError
-        with mock.patch.dict(sys.modules,{'serial':serial_module(port)}),mock.patch('builtins.input',console),mock.patch('builtins.print'):
-            code=record_classifier.main(['--port','fake','--output',str(out),'--quiet-seconds','0.2','--drain-seconds','5',*extra])
-        rows=[json.loads(x) for x in (out/'events.jsonl').read_text().splitlines()]
-        return code,out,rows,json.loads((out/'run_manifest.json').read_text()),json.loads((out/'summary.json').read_text())
+        return run_live(self,port,commands,*extra,hold=hold)
     def test_opening_state_is_recorded_then_normalized(self):
         port=FakePort(first_state=dict(mode='pir',armed=True))
         code,out,rows,manifest,summary=self.run_main(port,['CAPTURE 1'])
@@ -257,6 +263,32 @@ class RecordingTests(unittest.TestCase):
         r,_,s=self.record(raw.replace(line,line+line));self.assertEqual(len(r.errors),2)
         joined=raw[raw.index(b'TRIAL_DATA 1 input 3600 '):]
         r,_,s=self.record(joined);self.assertEqual(len(r.errors),2)
+    def test_gallery_draws_boxes_and_lists_trials(self):
+        raw,_,_=fixture(schema=2,boxes=[dict(category=0,score=.3,box=[32,24,95,71])])
+        r,root,s=self.record(raw)
+        page=(root/'index.html').read_text()
+        self.assertIn('left:10.00%;top:10.00%;width:20.00%;height:20.00%',page);self.assertIn('<span>0.300</span>',page)
+        with (root/'trials.csv').open() as stream:rows=list(csv.DictReader(stream))
+        self.assertEqual([(x['trial'],x['frames'],x['max_score'],x['confirmed']) for x in rows],[('1','1','0.2','False')])
+        self.assertEqual(s['trials'][0]['recording'],'full')
+    def test_markers_are_tied_to_the_frame_before_them(self):
+        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);root=Path(temp.name)
+        r=Receiver(root,context=dict(label='D1 at 5 in',notes='white light'));r.mark('before any frame')
+        raw,_,_=fixture(schema=2);r.feed(raw);r.mark('print removed');r.finish()
+        rows=[json.loads(x) for x in (root/'events.jsonl').read_text().splitlines() if 'marker' in x]
+        self.assertEqual([(x['marker'],x['after_frame']) for x in rows],[('before any frame',None),('print removed','0123456789abcdef-trial-000001-frame-000001')])
+        page=(root/'index.html').read_text()
+        self.assertLess(page.index('Marker: before any frame'),page.index('Trial 1, frame 1'));self.assertLess(page.index('Trial 1, frame 1'),page.index('Marker: print removed'))
+        self.assertIn('D1 at 5 in',page)
+    def test_live_manifest_closes_with_hashes_and_firmware(self):
+        boot=('BOOT deer_recorded_trials schema=2 boot=0123456789abcdef model_bytes=499712 sha256='+'a'*64+' firmware='+json.dumps(dict(project='deer_recorded_trials',version='1',idf='v5.4.2',compiled='Nov 11 2026 10:00:00',elf_sha256='b'*64),separators=(',',':'))+'\n').encode()
+        raw,_,_=fixture(schema=2)
+        port=FakePort(after_stop=boot+raw,drip=900)
+        code,out,rows,manifest,summary=run_live(self,port,[],'--label','D1')
+        self.assertEqual(manifest['firmware']['0123456789abcdef']['elf_sha256'],'b'*64);self.assertEqual(manifest['label'],'D1')
+        for name,entry in manifest['artifacts'].items():
+            self.assertEqual(entry['sha256'],hashlib.sha256((out/name).read_bytes()).hexdigest())
+        self.assertIn('serial.raw',manifest['artifacts']);self.assertNotIn('run_manifest.json',manifest['artifacts'])
     def test_sensor_state_lines_are_not_errors(self):
         line='PIR_STATE '+json.dumps(dict(boot='0123456789abcdef',mode='pir',pir=1,warmed_up=True,paused=False,pause_remaining_s=0,armed=True,at_us=61000000))
         r,root,s=self.record((line+'\n').encode());self.assertFalse(r.errors)
@@ -264,7 +296,7 @@ class RecordingTests(unittest.TestCase):
     def test_lighting_is_recorded_and_validated(self):
         raw,_,_=fixture();raw=raw.replace(b'"lighting": "ambient"',b'"lighting": "white"')
         r,root,s=self.record(raw);self.assertFalse(r.errors);self.assertEqual(s['complete_valid_pairs'],1)
-        self.assertIn('Capture lighting: white',(root/'index.html').read_text())
+        self.assertIn('lighting white',(root/'index.html').read_text())
         r,_,s=self.record(raw.replace(b'"capture_lighting_ok": true',b'"capture_lighting_ok": false'))
         self.assertTrue(r.errors);self.assertEqual(s['complete_valid_pairs'],0)
     def test_command_boundaries(self):
