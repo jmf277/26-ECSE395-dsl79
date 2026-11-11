@@ -7,10 +7,12 @@
 namespace recognition_trial {
 enum class Mode { Manual, Pir };
 enum class Lighting { Ambient, White };
-enum class AlarmSource { None, Recognition, OutputTest };
+enum class AlarmSource { None, Recognition, OutputTest, InjectedDetection };
 struct Ticket { uint32_t generation = 0, trial = 0, frame = 0, within = 0; bool pir = false, illuminated = false; };
 struct Decision { bool accepted = false, present = false, alarmStarted = false; };
 struct OutputTestEnd { uint32_t id = 0; bool completed = false; };
+struct InjectionStart { uint32_t id = 0; int64_t alarmStartUs = -1; };
+struct InjectionEnd { uint32_t id = 0; bool completed = false; int64_t alarmStartUs = -1, endedUs = -1; };
 
 // Hardware-free controller. The application serializes every method with one
 // mutex. A generation change makes a completed but cancelled inference inert.
@@ -26,10 +28,10 @@ public:
     bool armed = false, busy = false, inFlight = false;
     uint32_t trial = 0, frame = 0, within = 0, requested = 0;
     int64_t alarmStart = -1, cooldownUntil = 0;
-    uint32_t outputTestId = 0;
+    uint32_t outputTestId = 0, injectionId = 0;
 
     void cancel() {
-        finishOutputTest(false);
+        finishCommanded(false, -1);
         ++generation_; busy = false; armed = false; alarmStart = -1;
         alarmSource = AlarmSource::None; captureLightUntil_ = 0;
         cooldownUntil = 0; previousPir_ = true; gate_.reset();
@@ -52,6 +54,21 @@ public:
     }
     OutputTestEnd takeOutputTestEnd() {
         auto result = pendingTestEnd_; pendingTestEnd_ = {}; return result;
+    }
+    // Injects a confirmed deer detection at the decision point. It stands in for a
+    // two-of-three confirmation: it needs the same permission (armed) and starts
+    // the alarm through the same branch as a confirmed frame. No picture is taken.
+    bool injectDetection(int64_t now) {
+        if (mode != Mode::Manual || busy || inFlight || alarmStart >= 0 || pendingInjectionEnd_.id) return false;
+        if (!startAlarm(now, AlarmSource::InjectedDetection)) return false;
+        ++injectionId; pendingInjectionStart_ = {injectionId, now};
+        gate_.reset(); return true;
+    }
+    InjectionStart takeInjectionStart() {
+        auto result = pendingInjectionStart_; pendingInjectionStart_ = {}; return result;
+    }
+    InjectionEnd takeInjectionEnd() {
+        auto result = pendingInjectionEnd_; pendingInjectionEnd_ = {}; return result;
     }
     bool arm(bool value) {
         if (!value) { cancel(); return true; }
@@ -95,8 +112,7 @@ public:
         const bool present = gate_.update(validImage, score);
         qualified_ |= present;
         bool started = false;
-        if (present && armed && alarmStart < 0) {
-            alarmStart = now; alarmSource = AlarmSource::Recognition;
+        if (present && startAlarm(now, AlarmSource::Recognition)) {
             started = true; endAfterFrame_ = true;
         }
         return {true, present, started};
@@ -111,7 +127,7 @@ public:
     }
     deterrent::Outputs tick(int64_t now) {
         if (alarmStart >= 0 && (now < alarmStart || now - alarmStart >= deterrent::durationUs)) {
-            finishOutputTest(now >= alarmStart);
+            finishCommanded(now >= alarmStart, now);
             alarmStart = -1; alarmSource = AlarmSource::None; previousPir_ = true;
         }
         if (captureLightUntil_ && now >= captureLightUntil_) captureLightUntil_ = 0;
@@ -125,8 +141,17 @@ private:
     int64_t captureLightUntil_ = 0;
     OutputTestEnd pendingTestEnd_;
     uint32_t pendingTestStart_ = 0;
-    void finishOutputTest(bool completed) {
+    InjectionStart pendingInjectionStart_;
+    InjectionEnd pendingInjectionEnd_;
+    // The one place an alarm starts for a decision: a confirmed frame or an
+    // injected detection. The output test has its own entry, used only disarmed.
+    bool startAlarm(int64_t now, AlarmSource source) {
+        if (!armed || alarmStart >= 0) return false;
+        alarmStart = now; alarmSource = source; return true;
+    }
+    void finishCommanded(bool completed, int64_t now) {
         if (alarmSource == AlarmSource::OutputTest) pendingTestEnd_ = {outputTestId, completed};
+        if (alarmSource == AlarmSource::InjectedDetection) pendingInjectionEnd_ = {injectionId, completed, alarmStart, now};
     }
     bool start(unsigned count) {
         if (!count || count > maxFrames || busy || inFlight || alarmStart >= 0) return false;

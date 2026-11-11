@@ -195,7 +195,7 @@ void status(const char* command, bool accepted) {
     armed=controller.armed;busy=controller.busy;inFlight=controller.inFlight;
     alarm=controller.alarmStart>=0;trial=controller.trial;within=controller.within;requested=controller.requested;
     lighting=controller.lighting==recognition_trial::Lighting::White?"white":"ambient";
-    source=controller.alarmSource==recognition_trial::AlarmSource::OutputTest?"output_test":controller.alarmSource==recognition_trial::AlarmSource::Recognition?"recognition":"none";
+    source=controller.alarmSource==recognition_trial::AlarmSource::OutputTest?"output_test":controller.alarmSource==recognition_trial::AlarmSource::Recognition?"recognition":controller.alarmSource==recognition_trial::AlarmSource::InjectedDetection?"injected_detection":"none";
   }
   line("TRIAL_STATUS {\"boot\":\"%s\",\"command\":\"%s\",\"accepted\":%s,\"mode\":\"%s\",\"lighting\":\"%s\",\"armed\":%s,\"busy\":%s,\"in_flight\":%s,\"alarm\":%s,\"alarm_source\":\"%s\",\"trial\":%u,\"attempted\":%u,\"requested\":%u}",
     bootId,command,accepted?"true":"false",mode,lighting,armed?"true":"false",busy?"true":"false",inFlight?"true":"false",alarm?"true":"false",source,trial,within,requested);
@@ -203,6 +203,18 @@ void status(const char* command, bool accepted) {
 void outputTestEvent(uint32_t id,const char* event) {
   line("OUTPUT_TEST {\"schema\":1,\"boot\":\"%s\",\"test\":%u,\"event\":\"%s\",\"source\":\"manual_command\",\"observed_us\":%lld}",
     bootId,id,event,static_cast<long long>(esp_timer_get_time()));
+}
+// An injected detection is recorded apart from frames: no picture, no score.
+// alarm_start_us is the controller's start; ended_us is null when it was cancelled.
+void injectionStarted(const recognition_trial::InjectionStart& start) {
+  line("INJECTION {\"schema\":1,\"boot\":\"%s\",\"injection\":%u,\"event\":\"started\",\"detection\":\"confirmed_deer\",\"source\":\"usb_command\",\"alarm_start_us\":%lld,\"observed_us\":%lld}",
+    bootId,start.id,static_cast<long long>(start.alarmStartUs),static_cast<long long>(esp_timer_get_time()));
+}
+void injectionEnded(const recognition_trial::InjectionEnd& end) {
+  char ended[24]="null";
+  if(end.endedUs>=0)std::snprintf(ended,sizeof(ended),"%lld",static_cast<long long>(end.endedUs));
+  line("INJECTION {\"schema\":1,\"boot\":\"%s\",\"injection\":%u,\"event\":\"%s\",\"detection\":\"confirmed_deer\",\"source\":\"usb_command\",\"alarm_start_us\":%lld,\"ended_us\":%s,\"observed_us\":%lld}",
+    bootId,end.id,end.completed?"completed":"cancelled",static_cast<long long>(end.alarmStartUs),ended,static_cast<long long>(esp_timer_get_time()));
 }
 void commandTask(void*) {
   char buffer[80];
@@ -231,6 +243,9 @@ void commandTask(void*) {
         case K::White:accepted=controller.setLighting(recognition_trial::Lighting::White);break;
         case K::OutputTest:
           accepted=usb_serial_jtag_is_connected()&&controller.startOutputTest(esp_timer_get_time());
+          break;
+        case K::InjectDeer:
+          accepted=usb_serial_jtag_is_connected()&&controller.injectDetection(esp_timer_get_time());
           break;
         default:break;
       }
@@ -373,15 +388,17 @@ extern "C" void app_main() {
   DeerDetector detector;
   if(!detector.initialize()||!run_inference_smoke(detector)){esp_camera_deinit();return;}
   for(unsigned i=0;i<8;++i){auto* f=esp_camera_fb_get();if(f)esp_camera_fb_return(f);vTaskDelay(pdMS_TO_TICKS(100));}
-  line("READY boot=%s mode=manual armed=0 threshold=%.4f window=3 required=2 model_input=224x224x3 lighting=ambient commands=CAPTURE_n,MODE_MANUAL,MODE_PIR,LIGHT_AMBIENT,LIGHT_WHITE,TEST_OUTPUT,ARM,DISARM,STOP,STATUS",bootId,kThreshold);
+  line("READY boot=%s mode=manual armed=0 threshold=%.4f window=3 required=2 model_input=224x224x3 lighting=ambient commands=CAPTURE_n,MODE_MANUAL,MODE_PIR,LIGHT_AMBIENT,LIGHT_WHITE,TEST_OUTPUT,INJECT_DEER,ARM,DISARM,STOP,STATUS",bootId,kThreshold);
   if(xTaskCreate(commandTask,"trial_commands",4096,nullptr,3,nullptr)!=pdPASS){line("ERROR command_task");return;}
   int64_t nextCapture=0;
   while(true) {
     bool started=false;uint32_t testStart=0;recognition_trial::Ticket ticket;recognition_trial::OutputTestEnd testEnd;
+    recognition_trial::InjectionStart injectionStart;recognition_trial::InjectionEnd injectionEnd;
     {
       Lock lock(policyMutex);
       const auto now=esp_timer_get_time();
       testStart=controller.takeOutputTestStart();testEnd=controller.takeOutputTestEnd();
+      injectionStart=controller.takeInjectionStart();injectionEnd=controller.takeInjectionEnd();
       if(usb_serial_jtag_is_connected()) {
         started=controller.pollPir(gpio_get_level(GPIO_NUM_5),now);
         if(now>=nextCapture)ticket=controller.take();
@@ -389,6 +406,8 @@ extern "C" void app_main() {
     }
     if(testStart)outputTestEvent(testStart,"started");
     if(testEnd.id)outputTestEvent(testEnd.id,testEnd.completed?"completed":"cancelled");
+    if(injectionStart.id)injectionStarted(injectionStart);
+    if(injectionEnd.id)injectionEnded(injectionEnd);
     if(started)status("PIR_TRIGGER",true);
     if(ticket.generation) {
       runFrame(ticket,detector);
