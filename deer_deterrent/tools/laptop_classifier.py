@@ -72,8 +72,12 @@ class Device:
         request = Request(self.base + path, data=data,
                           headers={} if fields is None else {"Content-Type": "application/x-www-form-urlencoded"})
         limit = MAX_JPEG if image else 65536
-        with self.opener.open(request, timeout=self.timeout) as response:
-            body = response.read(limit + 1)
+        try:
+            with self.opener.open(request, timeout=self.timeout) as response:
+                body = response.read(limit + 1)
+        except HTTPError as refused:
+            refused.close()  # release the device's reply; callers use only its status and message
+            raise
         if len(body) > limit:
             raise ValueError("device response exceeds limit")
         return body if image else strict_json(body)

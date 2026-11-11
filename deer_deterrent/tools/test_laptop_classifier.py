@@ -33,6 +33,10 @@ class Predictor:
         self.inputs.append(jpeg);score=self.scores[min(len(self.inputs),len(self.scores))-1]
         return {'score':score,'boxes':[]}
 
+def refused(code,message):
+    """A refusal as Device.request raises it, its reply already released."""
+    error=HTTPError('http://device/classification',code,message,{},None);error.close();return error
+
 class FakeDevice:
     """Serves the manifest's photos and answers verdicts with the board's two-of-three rule."""
     def __init__(self,jpegs):
@@ -43,7 +47,7 @@ class FakeDevice:
             index=int(parse_qs(urlsplit(path).query)['id'][0])-3
             return self.jpegs[index]
         self.posts.append(fields)
-        if self.fail:raise HTTPError('http://device/classification',409,'expired',{},None)
+        if self.fail:raise refused(409,'expired')
         self.history=(self.history+[fields['deer']=='true'])[-3:]
         present=sum(self.history)>=2;start=present and not self.alarm;self.alarm|=start
         return dict(accepted=True,duplicate=False,present=present,alarm_started=start)
@@ -201,6 +205,10 @@ class MainLoopTests(unittest.TestCase):
             out,rows=self.run_client(board,[.1],'--capture')
         self.assertEqual(board.refusals,1);self.assertEqual(board.verdicts,['false'])
         self.assertTrue(any('capture_deferred' in r for r in rows))
+    def test_refused_request_releases_its_reply(self):
+        with EmulatedBoard([photo(62)],refuse_first_capture=True) as board:
+            with self.assertRaises(HTTPError) as caught:Device(board.url).request('/capture',{},image=True)
+        self.assertEqual(caught.exception.code,409);self.assertTrue(caught.exception.fp.closed)
 
 class StandInModel:
     """Minimal stand-ins for torch and ultralytics, to run EspDetPredictor's own code."""

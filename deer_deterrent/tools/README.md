@@ -103,7 +103,7 @@ Schema 2 intentionally replaces ambiguous legacy summary names:
 python -m unittest discover -s tools -p 'test_*.py'
 ```
 
-The suite runs 106 tests and needs Pillow. The detector tests cover transfer corruption, exact raw-byte retention, partial transfers, duplicate frame IDs after boot, invalid metadata, manifest corruption, missing trigger/end/frame history, first-frame generation continuity, delayed canceled captures, ARM/calibration/policy boundaries, legacy configurations, and native-gate agreement/mismatch. The C++ replay tests require `c++`; the suite explicitly skips them if it is absent. The recognition recorder and laptop client tests are described below. These are host-side software tests. Use the retained corpus command above to check real saved records as well.
+The suite runs 107 tests and needs Pillow. The detector tests cover transfer corruption, exact raw-byte retention, partial transfers, duplicate frame IDs after boot, invalid metadata, manifest corruption, missing trigger/end/frame history, first-frame generation continuity, delayed canceled captures, ARM/calibration/policy boundaries, legacy configurations, and native-gate agreement/mismatch. The C++ replay tests require `c++`; the suite explicitly skips them if it is absent. The recognition recorder and laptop client tests are described below. These are host-side software tests. Use the retained corpus command above to check real saved records as well.
 
 ## Neural recognition recordings
 
