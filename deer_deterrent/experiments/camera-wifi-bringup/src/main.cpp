@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_ST7789.h>
+#include "esp_timer.h"
+#include "freertos/semphr.h"
 #include "esp_camera.h"
 #include "camera_pins.h"
+#include "reply_gate.hpp"
 
 constexpr uint8_t PIR_PIN = 5;
 constexpr uint8_t BUZZER_PIN = 10;
@@ -12,7 +13,28 @@ constexpr unsigned long PIR_WARMUP_MS = 60000;
 constexpr char AP_NAME[] = "Feather-Camera-Test";
 constexpr char AP_PASSWORD[] = "ChangeMe123";
 WebServer server(80);
-Adafruit_ST7789 display(TFT_CS, TFT_DC, TFT_RST);
+laptop_trial::ReplyGate replyGate;
+SemaphoreHandle_t replyMutex=nullptr;
+bool outputsReady=false;
+class Lock {
+  SemaphoreHandle_t mutex_;
+public:
+  explicit Lock(SemaphoreHandle_t m):mutex_(m){xSemaphoreTake(mutex_,portMAX_DELAY);}
+  ~Lock(){xSemaphoreGive(mutex_);}
+};
+void applyOutputs(deterrent::Outputs state) {
+  if(!outputsReady)return;
+  for(auto pin:{13,36,35})digitalWrite(pin,state.white?HIGH:LOW);
+  ledcWrite(2,state.tone?512:0);
+}
+void outputTick(void*) {
+  Lock lock(replyMutex);
+  applyOutputs(replyGate.tick(millis()));
+}
+bool alarmActive() {Lock lock(replyMutex);return replyGate.active();}
+uint32_t checksum(const uint8_t* bytes,size_t size) {
+  uint32_t value=2166136261u;for(size_t i=0;i<size;++i)value=(value^bytes[i])*16777619u;return value;
+}
 uint8_t* latestImage = nullptr;
 size_t latestLength = 0;
 unsigned long captureCount = 0;
@@ -25,7 +47,7 @@ String lastSource = "none";
 constexpr unsigned MAX_BURST_PHOTOS = 10;
 constexpr unsigned long SHOT_GAP_MS = 2000;
 constexpr unsigned long COOLDOWN_MS = 120000;
-struct SavedPhoto { uint8_t* data; size_t length; unsigned long id; };
+struct SavedPhoto { uint8_t* data; size_t length; unsigned long id; uint32_t hash; };
 SavedPhoto burstPhotos[MAX_BURST_PHOTOS] = {};
 unsigned savedCount = 0;
 unsigned attemptCount = 0;
@@ -42,6 +64,7 @@ bool reached(unsigned long now, unsigned long deadline) {
 }
 
 void beginBurst(const char* source) {
+  {Lock lock(replyMutex);if(!replyGate.begin(burstId+1))return;}
   for (auto& photo : burstPhotos) {
     free(photo.data);
     photo = {};
@@ -60,18 +83,6 @@ void beginBurst(const char* source) {
 
 void showStatus(const String& text) {
   statusText = text;
-  display.fillScreen(ST77XX_BLACK);
-  display.setTextWrap(true);
-  display.setTextColor(ST77XX_WHITE);
-  display.setTextSize(2);
-  display.setCursor(4, 4);
-  display.println("PIR Burst V4");
-  display.setTextSize(1);
-  display.println();
-  display.println(text);
-  display.printf("\nPhotos: %lu\n", captureCount);
-  display.println("Camera standby between shots");
-  display.println("192.168.4.1 | Buzzer OFF");
   Serial.println(text);
 }
 
@@ -140,7 +151,8 @@ bool takePhoto(const char* source) {
         latestImage = copy;
         latestLength = frame->len;
         ++captureCount;
-        burstPhotos[savedCount++] = {copy, frame->len, captureCount};
+        burstPhotos[savedCount++] = {copy, frame->len, captureCount, checksum(copy,frame->len)};
+        {Lock lock(replyMutex);replyGate.retain(captureCount,millis());}
         lastSource = source;
         success = true;
         Serial.printf("Saved JPEG %lu: %u bytes\n", captureCount, unsigned(latestLength));
@@ -159,6 +171,9 @@ void sendLatest() {
   uint8_t* image = latestImage;
   size_t length = latestLength;
   if (server.hasArg("id")) {
+    if(server.arg("boot")!=bootId||server.arg("burst")!=String(burstId)) {
+      server.send(409,"text/plain","Stale boot/burst image request.");return;
+    }
     image = nullptr;
     length = 0;
     const String requestedId = server.arg("id");
@@ -193,18 +208,23 @@ void sendLatest() {
 
 void setup() {
   Serial.begin(115200);
-  bootId = String(esp_random(), HEX) + String(esp_random(), HEX);
+  char identity[17];snprintf(identity,sizeof(identity),"%08lx%08lx",(unsigned long)esp_random(),(unsigned long)esp_random());bootId=identity;
+  replyMutex=xSemaphoreCreateMutex();if(!replyMutex)return;
   pinMode(PIR_PIN, INPUT_PULLDOWN);
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
+  // RGB occupies TFT SPI pins; keep the TFT deselected and backlight off.
+  pinMode(7,OUTPUT);digitalWrite(7,HIGH);
+  pinMode(45,OUTPUT);digitalWrite(45,LOW);
+  pinMode(21,OUTPUT);digitalWrite(21,HIGH);
+  for(auto pin:{13,36,35}){pinMode(pin,OUTPUT);digitalWrite(pin,LOW);}
+  if(ledcSetup(2,2000,10)==0)return;
+  ledcAttachPin(BUZZER_PIN,2);outputsReady=true;
+  esp_timer_create_args_t timerArgs={};timerArgs.callback=outputTick;timerArgs.name="laptop_alarm";
+  esp_timer_handle_t timer=nullptr;
+  if(esp_timer_create(&timerArgs,&timer)!=ESP_OK||esp_timer_start_periodic(timer,20000)!=ESP_OK){outputsReady=false;return;}
   standbyCamera();
-  pinMode(TFT_I2C_POWER, OUTPUT);
-  digitalWrite(TFT_I2C_POWER, HIGH);
-  pinMode(TFT_BACKLITE, OUTPUT);
-  digitalWrite(TFT_BACKLITE, HIGH);
   delay(10);
-  display.init(135, 240);
-  display.setRotation(3);
   WiFi.mode(WIFI_AP);
   if (!WiFi.softAP(AP_NAME, AP_PASSWORD)) {
     showStatus("Wi-Fi startup failed. Reset to retry.");
@@ -212,28 +232,42 @@ void setup() {
   }
   server.on("/", HTTP_GET, []() {
     server.send(200, "text/html", R"HTML(<!doctype html><html><meta name="viewport" content="width=device-width"><title>PIR camera</title><body>
-<h1>PIR burst camera test</h1><p id="status">Loading status...</p>
+<h1>Laptop recognition trial</h1><p id="status">Loading status...</p>
 <button onclick="snap()">Start 10-photo burst</button> <a href="/latest.jpg?download=1">Download latest photo</a>
+<button onclick="control('arm')">Arm response</button><button onclick="control('stop')">Stop and disarm</button>
 <p><img id="photo" style="max-width:100%" alt="Waiting for first photo"></p>
-<p>Up to 10 photos per burst, stopping if the computer reports deer. Two-minute capture pause if PIR is still HIGH after 10 attempts. Camera standby between shots; Wi-Fi stays on. Buzzer OFF. Classifier must run separately on the computer.</p><p><a href="/burst">Burst photo manifest</a></p>
-<script>let seen=0,busy=false;async function poll(){if(busy)return;try{let s=await(await fetch('/status',{cache:'no-store'})).json();document.getElementById('status').textContent=s.state+' | PIR '+(s.pir?'HIGH':'LOW')+' | Photos '+s.photos;if(s.photos&&s.photos!==seen){seen=s.photos;document.getElementById('photo').src='/latest.jpg?t='+Date.now()}}catch(e){document.getElementById('status').textContent='Reconnecting...'}}async function snap(){busy=true;try{let r=await fetch('/capture',{method:'POST'});if(!r.ok)alert(await r.text())}catch(e){alert('Capture request failed')}finally{busy=false;poll()}}setInterval(poll,1500);poll();</script></body></html>)HTML");
+<p>The computer classifies retained JPEGs and returns a verdict tied to the image. One positive verdict stops acquisition and, when armed, starts three tone pulses and white flashes. Boot is disarmed. Capture uses ambient light. No new burst begins during the response.</p><p><a href="/burst">Burst photo manifest</a></p>
+<script>let seen=0,busy=false;async function poll(){if(busy)return;try{let s=await(await fetch('/status',{cache:'no-store'})).json();document.getElementById('status').textContent=s.state+' | Armed '+s.armed+' | Alarm '+s.alarm_active+' | PIR '+(s.pir?'HIGH':'LOW')+' | Photos '+s.photos;if(s.photos&&s.photos!==seen){seen=s.photos;document.getElementById('photo').src='/latest.jpg?t='+Date.now()}}catch(e){document.getElementById('status').textContent='Reconnecting...'}}async function control(action){busy=true;try{let r=await fetch('/'+action,{method:'POST'});if(!r.ok)alert(await r.text())}catch(e){alert('Request failed')}finally{busy=false;poll()}}async function snap(){await control('capture')}setInterval(poll,1500);poll();</script></body></html>)HTML");
   });
   server.on("/status", HTTP_GET, []() {
     // Only fixed program messages enter this JSON field.
     String text = statusText;
     text.replace("\\", "\\\\"); text.replace("\"", "\\\""); text.replace("\n", "\\n");
+    bool armed,alarm;{Lock lock(replyMutex);armed=replyGate.armed;alarm=replyGate.active();}
     server.sendHeader("Cache-Control", "no-store");
-    server.send(200, "application/json", "{\"state\":\"" + text + "\",\"pir\":" +
+    server.send(200, "application/json", "{\"protocol\":2,\"state\":\"" + text + "\",\"pir_ready\":"+String(pirReady?"true":"false")+",\"pir\":" +
                 String(digitalRead(PIR_PIN) == HIGH ? "true" : "false") +
                 ",\"photos\":" + String(captureCount) +
                 ",\"boot\":\"" + bootId + "\",\"burst\":" + String(burstId) +
                 ",\"burst_active\":" + String(burstActive ? "true" : "false") +
                 ",\"attempts\":" + String(attemptCount) +
                 ",\"deer\":" + String(deerDetected ? "true" : "false") +
+                ",\"armed\":"+String(armed?"true":"false")+",\"alarm_active\":"+String(alarm?"true":"false")+
                 ",\"cooldown_seconds\":" + String(coolingDown ? (COOLDOWN_MS - min(COOLDOWN_MS, millis() - cooldownStart) + 999) / 1000 : 0) + "}");
   });
+  server.on("/arm",HTTP_POST,[](){
+    if(burstActive||alarmActive()){server.send(409,"text/plain","Finish or stop the active trial first.");return;}
+    {Lock lock(replyMutex);replyGate.arm();}
+    server.send(200,"application/json","{\"armed\":true}");
+  });
+  server.on("/stop",HTTP_POST,[](){
+    {Lock lock(replyMutex);replyGate.cancel();applyOutputs({});}
+    burstActive=false;coolingDown=false;previousPir=true;standbyCamera();
+    showStatus("Stopped and disarmed. Prior replies are invalid.");
+    server.send(200,"application/json","{\"armed\":false,\"alarm_active\":false}");
+  });
   server.on("/capture", HTTP_POST, []() {
-    if (burstActive || coolingDown || !pirReady) {
+    if (burstActive || coolingDown || !pirReady || alarmActive()) {
       server.send(409, "text/plain", "Wait for PIR warmup, active burst or cooldown to finish.");
       return;
     }
@@ -247,10 +281,12 @@ void setup() {
   server.on("/latest.jpg", HTTP_GET, sendLatest);
   server.on("/photo.jpg", HTTP_GET, sendLatest);
   server.on("/burst", HTTP_GET, []() {
-    String body = "{\"boot\":\"" + bootId + "\",\"burst\":" + String(burstId) + ",\"images\":[";
+    bool accepting;{Lock lock(replyMutex);accepting=replyGate.open;}
+    String body = "{\"protocol\":2,\"boot\":\"" + bootId + "\",\"burst\":" + String(burstId) + ",\"accepting_results\":"+String(accepting?"true":"false")+",\"images\":[";
     for (unsigned i = 0; i < savedCount; ++i) {
       if (i) body += ',';
-      body += "{\"id\":" + String(burstPhotos[i].id) + ",\"url\":\"/photo.jpg?id=" + String(burstPhotos[i].id) + "\"}";
+      char hash[9];snprintf(hash,sizeof(hash),"%08lx",(unsigned long)burstPhotos[i].hash);
+      body += "{\"id\":" + String(burstPhotos[i].id) + ",\"bytes\":"+String(burstPhotos[i].length)+",\"fnv1a\":\""+String(hash)+"\",\"url\":\"/photo.jpg?id=" + String(burstPhotos[i].id) + "&boot="+bootId+"&burst="+String(burstId)+"\"}";
     }
     server.sendHeader("Cache-Control", "no-store");
     server.send(200, "application/json", body + "]}");
@@ -261,23 +297,30 @@ void setup() {
       server.send(409, "text/plain", "Stale boot or burst result.");
       return;
     }
-    bool validPhoto = false;
+    bool validPhoto = false;unsigned long imageId=0;
     for (unsigned i = 0; i < savedCount; ++i)
-      if (server.arg("id") == String(burstPhotos[i].id)) validPhoto = true;
+      if (server.arg("id") == String(burstPhotos[i].id)) {
+        char hash[9];snprintf(hash,sizeof(hash),"%08lx",(unsigned long)burstPhotos[i].hash);
+        validPhoto=server.arg("fnv1a")==hash;imageId=burstPhotos[i].id;
+      }
     const String verdict = server.arg("deer");
     if (!validPhoto || (verdict != "true" && verdict != "false")) {
-      server.send(400, "text/plain", "Expected retained photo id and deer=true or deer=false.");
+      server.send(400, "text/plain", "Expected retained photo id/checksum and deer=true or deer=false.");
       return;
     }
-    if (verdict == "true" && !deerDetected) {
+    laptop_trial::Decision decision;
+    {Lock lock(replyMutex);decision=replyGate.submit(burstId,imageId,verdict=="true",millis());applyOutputs(replyGate.tick(millis()));}
+    using R=laptop_trial::Reply;
+    if(decision.reply!=R::Accepted&&decision.reply!=R::Duplicate){server.send(409,"text/plain","Expired, conflicting or cancelled verdict.");return;}
+    if (verdict == "true" && decision.reply==R::Accepted && !deerDetected) {
       deerDetected = true;
       burstActive = false;
       coolingDown = false;
       previousPir = true; // Require a LOW before another automatic rising edge.
       standbyCamera();
-      showStatus("DEER reported by computer. Burst stopped; buzzer OFF.");
+      showStatus(decision.startAlarm?"DEER verdict: light/buzzer response started.":"DEER verdict recorded; response disarmed.");
     }
-    server.send(200, "text/plain", "Classification accepted.");
+    server.send(200,"application/json",String("{\"accepted\":true,\"duplicate\":")+(decision.reply==R::Duplicate?"true":"false")+",\"alarm_started\":"+(decision.startAlarm?"true":"false")+"}");
   });
   server.begin();
   warmupStart = millis();
@@ -285,14 +328,16 @@ void setup() {
 }
 
 void loop() {
+  if(!outputsReady||!replyMutex){delay(100);return;}
   server.handleClient();
+  if(alarmActive()){previousPir=true;delay(5);return;}
   const unsigned long elapsed = millis() - warmupStart;
   if (!pirReady) {
     if (elapsed >= PIR_WARMUP_MS) {
       pirReady = true;
       previousPir = digitalRead(PIR_PIN) == HIGH;
       showStatus(previousPir ? "PIR HIGH at warmup end. Waiting for LOW, then motion."
-                             : "Armed. Waiting for motion. Camera in standby.");
+                             : "PIR ready. Waiting for motion. Camera in standby.");
     } else {
       const unsigned long remaining = (PIR_WARMUP_MS - elapsed + 999) / 1000;
       if (remaining != lastCountdown) {
@@ -326,7 +371,7 @@ void loop() {
         showStatus("Cooldown ended; PIR HIGH. Starting new burst.");
       } else {
         previousPir = false;
-        showStatus("Cooldown ended. Armed for motion.");
+        showStatus("Cooldown ended. PIR ready for motion.");
       }
     }
   } else {
@@ -337,7 +382,7 @@ void loop() {
       showStatus("PIR motion: starting up to 10 photos.");
     } else if (!high && previousPir) {
       previousPir = false;
-      showStatus("PIR LOW. Armed for next motion. Camera in standby.");
+      showStatus("PIR LOW. Ready for next motion. Camera in standby.");
     }
   }
   delay(5);

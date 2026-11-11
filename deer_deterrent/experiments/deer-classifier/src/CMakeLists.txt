@@ -1,7 +1,7 @@
 idf_component_register(
     SRCS "app_main.cpp"
     INCLUDE_DIRS "."
-    PRIV_REQUIRES esp_timer esp_psram driver
+    PRIV_REQUIRES esp_timer esp_psram driver mbedtls json
                   espressif__esp-dl espressif__esp32-camera
 )
 

@@ -4,9 +4,12 @@
 #include <cmath>
 #include <cinttypes>
 #include <cstdio>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
+#include "esp_heap_caps.h"
+#include "esp_timer.h"
 
 #include "dl_detect_espdet_postprocessor.hpp"
 #include "dl_image_preprocessor.hpp"
@@ -14,6 +17,23 @@
 #include "sdkconfig.h"
 
 extern const uint8_t deer_model_data[] asm("_binary_deer_espdl_start");
+
+struct RecordedBox {
+  int category;
+  float score;
+  std::vector<int> box;
+};
+struct InferenceRecord {
+  int8_t* input = nullptr;
+  size_t inputBytes = 0;
+  int exponent = 0;
+  int64_t preprocessingUs = 0, inputCopyUs = 0, modelUs = 0, postprocessingUs = 0;
+  std::vector<RecordedBox> boxes;
+  ~InferenceRecord() { heap_caps_free(input); }
+  InferenceRecord() = default;
+  InferenceRecord(const InferenceRecord&) = delete;
+  InferenceRecord& operator=(const InferenceRecord&) = delete;
+};
 
 // One raw ESPDet-Pico export, not Espressif's packed cat/example model bundle.
 class DeerDetector {
@@ -65,12 +85,28 @@ class DeerDetector {
   // ESP-DL's model runner is fail-fast on allocation/operator errors. This
   // method validates returned scores; startup/runtime panics cannot emit a
   // successful deer event. An empty detection list is a valid zero score.
-  bool infer(const dl::image::img_t& image, float& score, bool trace_tensors = false) {
+  bool infer(const dl::image::img_t& image, float& score, bool trace_tensors = false,
+             InferenceRecord* record = nullptr) {
+    const auto before = esp_timer_get_time();
     preprocessor_->preprocess(image);
+    const auto prepared = esp_timer_get_time();
+    if (record) {
+      auto* input = model_->get_inputs().begin()->second;
+      record->inputBytes = 224 * 224 * 3;
+      record->input = static_cast<int8_t*>(heap_caps_malloc(record->inputBytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+      if (!record->input) return false;
+      // Copy BEFORE execution: the model memory planner may reuse its arena.
+      std::memcpy(record->input, input->get_element_ptr<int8_t>(), record->inputBytes);
+      record->exponent = input->get_exponent();
+      record->preprocessingUs = prepared - before;
+      record->inputCopyUs = esp_timer_get_time() - prepared;
+    }
     if (trace_tensors) {
       for (const auto& input : model_->get_inputs()) print_tensor("input", input.first.c_str(), input.second);
     }
+    const auto modelStart = esp_timer_get_time();
     model_->run();
+    const auto modelEnd = esp_timer_get_time();
     if (trace_tensors) {
       for (const auto& output : model_->get_outputs()) print_tensor("output", output.first.c_str(), output.second);
     }
@@ -80,6 +116,11 @@ class DeerDetector {
     for (const auto& detection : postprocessor_->get_result(image.width, image.height)) {
       if (!std::isfinite(detection.score) || detection.score < 0 || detection.score > 1) return false;
       if (detection.category == 0) score = std::max(score, detection.score);
+      if (record) record->boxes.push_back({detection.category, detection.score, detection.box});
+    }
+    if (record) {
+      record->modelUs = modelEnd - modelStart;
+      record->postprocessingUs = esp_timer_get_time() - modelEnd;
     }
     return true;
   }

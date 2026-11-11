@@ -1,7 +1,6 @@
 #pragma once
 
-// Layout V2: camera header rows grouped by Feather side.
-// Use the V2 wiring table in README.md. This differs from the original upload.
+// Assembled Feather/OV5640 wiring; see the repository's WIRING.md.
 constexpr bool CAMERA_BREAKOUT_CONFIRMED = true;
 
 // Camera D2 is driver d0, not Feather GPIO 2.
