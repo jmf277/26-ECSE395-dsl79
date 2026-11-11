@@ -5,3 +5,7 @@
 *.pyc
 **/src/model_data.S
 tools/captures/
+# Host test programs built by the documented commands
+experiments/deer-classifier/test_trial_control
+experiments/deer-classifier/test_decision_to_alarm
+experiments/camera-wifi-bringup/test_reply_gate
