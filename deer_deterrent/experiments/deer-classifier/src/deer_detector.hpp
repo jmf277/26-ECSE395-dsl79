@@ -18,12 +18,18 @@
 
 extern const uint8_t deer_model_data[] asm("_binary_deer_espdl_start");
 
+// Post-processing settings, written into every frame record.
+constexpr float kCandidateFloor = 0.10f;  // lowest box score kept
+constexpr float kNmsIou = 0.70f;          // overlap above which boxes merge
+constexpr int kMaxBoxes = 10;             // boxes kept per frame
+
 struct RecordedBox {
   int category;
   float score;
   std::vector<int> box;
 };
 struct InferenceRecord {
+  bool keepInput = true;  // copy the exact model input for transfer
   int8_t* input = nullptr;
   size_t inputBytes = 0;
   int exponent = 0;
@@ -77,7 +83,7 @@ class DeerDetector {
     preprocessor_.reset(new dl::image::ImagePreprocessor(model_.get(), {0, 0, 0}, {255, 255, 255}));
     preprocessor_->enable_letterbox({114, 114, 114});
     postprocessor_.reset(new dl::detect::ESPDetPostProcessor(
-        model_.get(), preprocessor_.get(), 0.10f, 0.70f, 10,
+        model_.get(), preprocessor_.get(), kCandidateFloor, kNmsIou, kMaxBoxes,
         {{8, 8, 4, 4}, {16, 16, 8, 8}, {32, 32, 16, 16}}));
     return true;
   }
@@ -93,11 +99,13 @@ class DeerDetector {
     if (record) {
       auto* input = model_->get_inputs().begin()->second;
       record->inputBytes = 224 * 224 * 3;
-      record->input = static_cast<int8_t*>(heap_caps_malloc(record->inputBytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
-      if (!record->input) return false;
-      // Copy BEFORE execution: the model memory planner may reuse its arena.
-      std::memcpy(record->input, input->get_element_ptr<int8_t>(), record->inputBytes);
       record->exponent = input->get_exponent();
+      if (record->keepInput) {
+        record->input = static_cast<int8_t*>(heap_caps_malloc(record->inputBytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+        if (!record->input) return false;
+        // Copy BEFORE execution: the model memory planner may reuse its arena.
+        std::memcpy(record->input, input->get_element_ptr<int8_t>(), record->inputBytes);
+      }
       record->preprocessingUs = prepared - before;
       record->inputCopyUs = esp_timer_get_time() - prepared;
     }

@@ -8,15 +8,18 @@ from pathlib import Path
 from PIL import Image
 from record_classifier import Receiver, fnv1a, INPUT_BYTES, valid_command
 
-def fixture():
+def fixture(schema=1,recording='full',boxes=()):
     photo=io.BytesIO();Image.new('RGB',(320,240),(60,100,150)).save(photo,format='JPEG')
     jpeg=photo.getvalue();tensor=bytes([0,32,127])*(224*224)
-    result=dict(schema=1,boot='0123456789abcdef',trial=1,frame=1,within=1,trigger='manual',model_sha256='a'*64,
+    result=dict(schema=schema,boot='0123456789abcdef',trial=1,frame=1,within=1,trigger='manual',model_sha256='a'*64,
                 valid=True,committed=True,present=False,armed=False,alarm_started=False,score=.2,lighting='ambient',capture_lighting_ok=True,
                 jpeg_bytes=len(jpeg),camera_width=320,camera_height=240,input_bytes=INPUT_BYTES,
-                input_dtype='int8',input_layout='NHWC',input_shape=[1,224,224,3],input_exponent=-7,boxes=[])
+                input_dtype='int8',input_layout='NHWC',input_shape=[1,224,224,3],input_exponent=-7,boxes=list(boxes))
+    if schema==2:
+        result.update(recording=recording,input_sent=recording=='full',candidate_floor=.1,nms_iou=.7,max_boxes=10,jpeg_quality=12,frame_interval_ms=500,
+                      camera_xclk_mhz=20,hmirror=False,vflip=False,build=dict(project='deer_recorded_trials',version='1',idf='v5.4.2',compiled='Nov 11 2026 10:00:00',elf_sha256='b'*64))
     lines=['TRIAL_FRAME '+json.dumps(result)]
-    for kind,data in [('jpeg',jpeg),('input',tensor)]:
+    for kind,data in [('jpeg',jpeg),('input',tensor)] if schema==1 or recording=='full' else [('jpeg',jpeg)]:
         header=dict(boot=result['boot'],trial=1,frame=1,kind=kind,bytes=len(data),fnv1a=fnv1a(data))
         lines.append('TRIAL_BLOB '+json.dumps(header))
         for offset in range(0,len(data),180):
@@ -120,6 +123,32 @@ class RecordingTests(unittest.TestCase):
         started2=started.replace('"injection":1','"injection":2').replace('5000000','6000000')
         r,_,s=self.record((started+'\n'+ended+'\n'+started2+'\n'+cancelled+'\n').encode())
         self.assertFalse(r.errors);self.assertEqual(s['injections_completed'],1);self.assertEqual(s['injections_cancelled'],1)
+    def test_schema2_full_frame_pairs_picture_and_input(self):
+        raw,jpeg,tensor=fixture(schema=2);r,root,s=self.record(raw,53)
+        self.assertFalse(r.errors);self.assertEqual(s['complete_valid_pairs'],1);self.assertEqual(s['frames_without_input'],0)
+        self.assertEqual(next(root.glob('*.i8')).read_bytes(),tensor)
+    def test_jpeg_only_frame_is_complete_without_input(self):
+        raw,jpeg,_=fixture(schema=2,recording='jpeg');r,root,s=self.record(raw)
+        self.assertFalse(r.errors);self.assertEqual(s['complete_valid_frames'],1);self.assertEqual(s['complete_valid_pairs'],0)
+        self.assertEqual(s['frames_without_input'],1);self.assertFalse(list(root.glob('*.i8')))
+        self.assertEqual(next(root.glob('*.jpg')).read_bytes(),jpeg)
+    def test_unannounced_input_blob_is_rejected(self):
+        full,_,_=fixture(schema=2);jpeg_only=full.replace(b'"recording": "full", "input_sent": true',b'"recording": "jpeg", "input_sent": false')
+        r,root,s=self.record(jpeg_only);self.assertTrue(r.errors);self.assertFalse(list(root.glob('*.i8')))
+        r,_,_=self.record(full.replace(b'"input_sent": true',b'"input_sent": "yes"'));self.assertTrue(r.errors)
+    def test_cancelled_input_transfer_is_counted_not_an_error(self):
+        raw,jpeg,_=fixture(schema=2);lines=raw.decode().splitlines()
+        start=next(i for i,x in enumerate(lines) if x.startswith('TRIAL_BLOB ') and '"input"' in x)
+        cut=lines[:start+3]+['TRIAL_BLOB_CANCELLED 1 input 360',
+            'TRIAL_END '+json.dumps(dict(boot='0123456789abcdef',trial=1,frame=1,transfer_complete=False,transfer_cancelled=True,transfer_us=5))]
+        r,root,s=self.record(('\n'.join(cut)+'\n').encode())
+        self.assertFalse(r.errors);self.assertEqual(s['cancelled_transfers'],1);self.assertEqual(s['complete_valid_pairs'],0)
+        self.assertEqual(next(root.glob('*.jpg')).read_bytes(),jpeg);self.assertFalse(list(root.glob('*.i8')))
+        r,_,_=self.record(('\n'.join(lines[:start+3]+['TRIAL_BLOB_CANCELLED 1 input 180'])+'\n').encode());self.assertTrue(r.errors)
+    def test_sensor_state_lines_are_not_errors(self):
+        line='PIR_STATE '+json.dumps(dict(boot='0123456789abcdef',mode='pir',pir=1,warmed_up=True,paused=False,pause_remaining_s=0,armed=True,at_us=61000000))
+        r,root,s=self.record((line+'\n').encode());self.assertFalse(r.errors)
+        self.assertIn('PIR_STATE',(root/'events.jsonl').read_text())
     def test_lighting_is_recorded_and_validated(self):
         raw,_,_=fixture();raw=raw.replace(b'"lighting": "ambient"',b'"lighting": "white"')
         r,root,s=self.record(raw);self.assertFalse(r.errors);self.assertEqual(s['complete_valid_pairs'],1)
@@ -127,9 +156,9 @@ class RecordingTests(unittest.TestCase):
         r,_,s=self.record(raw.replace(b'"capture_lighting_ok": true',b'"capture_lighting_ok": false'))
         self.assertTrue(r.errors);self.assertEqual(s['complete_valid_pairs'],0)
     def test_command_boundaries(self):
-        for text in ['LIGHT AMBIENT','LIGHT WHITE','TEST OUTPUT','INJECT DEER','CAPTURE 600','MODE PIR','STOP']:
+        for text in ['LIGHT AMBIENT','LIGHT WHITE','RECORD FULL','RECORD JPEG','TEST OUTPUT','INJECT DEER','CAPTURE 600','MODE PIR','STOP']:
             self.assertTrue(valid_command(text),text)
-        for text in ['TEST','TEST OUTPUT extra','TEST  OUTPUT','LIGHT BLUE','CAPTURE 601','CAPTURE 0','LIGHT WHITE\nARM','INJECT','INJECT DEER now','INJECT  DEER','inject deer']:
+        for text in ['TEST','TEST OUTPUT extra','TEST  OUTPUT','LIGHT BLUE','CAPTURE 601','CAPTURE 0','LIGHT WHITE\nARM','INJECT','INJECT DEER now','INJECT  DEER','inject deer','RECORD','RECORD MIXED']:
             self.assertFalse(valid_command(text),text)
 
 if __name__=='__main__':unittest.main()

@@ -185,6 +185,22 @@ Observed pirDuringAlarm(int run) {
     return o;
 }
 
+// A sensor rise while disarmed starts no trial (the program starts a sensor
+// trial only once armed); after ARM, the next LOW then HIGH starts one.
+Observed disarmedRise(int run) {
+    Controller c(kThreshold);
+    Observed o;
+    c.setMode(Mode::Pir);
+    const int64_t base = runStart(run);
+    c.pollPir(false, base);
+    o.commandAccepted = c.pollPir(true, base + kTickUs);
+    o.framesRun = c.take().generation ? 1 : 0;
+    c.arm(true);
+    o.endedCompleted = !c.pollPir(true, base + 2 * kTickUs) && !c.pollPir(false, base + 3 * kTickUs) &&
+                       c.pollPir(true, base + 4 * kTickUs);
+    return o;
+}
+
 // CAPTURE during a recognition alarm is refused; after it ends it is accepted.
 Observed captureDuringAlarm(int run) {
     Observed o = manualTrial(true, {0.90f, 0.90f}, run);
@@ -303,6 +319,8 @@ const Case kCases[] = {
      {true, 2, R, 2, 5, 1, false, true, false, true}},
     {"pir_during_alarm", "sensor rises during the alarm refused; LOW then HIGH needed after", pirDuringAlarm,
      {true, 2, R, 2, 28, 3, true, true, true, false}},
+    {"disarmed_sensor_rise", "sensor rise while disarmed: no trial; after ARM, LOW then HIGH starts one", disarmedRise,
+     {false, 0, N, 0, 0, 0, false, false, true, false}},
     {"capture_during_alarm", "CAPTURE refused during the alarm, accepted after", captureDuringAlarm,
      {true, 2, R, 2, 28, 3, true, true, false, false}},
     {"inject_armed", "INJECT DEER armed: alarm at once, no frame, completed", injectedArmed,

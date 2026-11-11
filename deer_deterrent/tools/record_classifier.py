@@ -25,7 +25,7 @@ INPUT_BYTES = 224 * 224 * 3
 
 
 def valid_command(command):
-    return bool(re.fullmatch(r"CAPTURE [1-9][0-9]{0,2}|MODE (MANUAL|PIR)|LIGHT (AMBIENT|WHITE)|TEST OUTPUT|INJECT DEER|ARM|DISARM|STOP|STATUS", command)) and not (
+    return bool(re.fullmatch(r"CAPTURE [1-9][0-9]{0,2}|MODE (MANUAL|PIR)|LIGHT (AMBIENT|WHITE)|RECORD (FULL|JPEG)|TEST OUTPUT|INJECT DEER|ARM|DISARM|STOP|STATUS", command)) and not (
         command.startswith("CAPTURE ") and int(command[8:]) > 600)
 
 
@@ -63,10 +63,23 @@ def identity(item):
     return boot, item["frame"]
 
 
+def expected_artifacts(item):
+    """Blobs that follow a frame record: schema 2 says whether the input is sent."""
+    kinds = {"jpeg"} if item["jpeg_bytes"] else set()
+    if item["input_bytes"] and (item["schema"] == 1 or item.get("input_sent")):
+        kinds.add("input")
+    return kinds
+
+
 def validate_result(item):
     identity(item)
-    if type(item.get("schema")) is not int or item["schema"] != 1:
+    if type(item.get("schema")) is not int or item["schema"] not in (1, 2):
         raise ValueError("unsupported record schema")
+    if item["schema"] == 2:
+        if item.get("recording") not in ("full", "jpeg") or type(item.get("input_sent")) is not bool:
+            raise ValueError("invalid recording level")
+        if item["recording"] == "jpeg" and item["input_sent"]:
+            raise ValueError("JPEG-only record must not send its input")
     if item.get("trigger") not in ("manual", "pir"):
         raise ValueError("invalid trigger")
     if "lighting" in item and item["lighting"] not in ("ambient", "white"):
@@ -235,6 +248,17 @@ class Receiver:
             self.save_blob(header, bytes(data))
             self.pending = None
             return
+        if text.startswith("TRIAL_BLOB_CANCELLED "):
+            parts = text.split()
+            if len(parts) != 4 or self.pending is None:
+                raise ValueError("orphan transfer cancellation")
+            header, data = self.pending
+            if int(parts[1]) != header["frame"] or parts[2] != header["kind"] or int(parts[3]) != len(data):
+                raise ValueError("transfer cancellation identity/offset mismatch")
+            self.frames[identity(header)]["cancelled_blob"] = header["kind"]
+            self.pending = None
+            self.emit(transfer_cancelled=dict(frame=header["frame"], kind=header["kind"], bytes_received=len(data)))
+            return
         if text.startswith("TRIAL_BLOB "):
             if self.pending is not None:
                 self.error("previous blob interrupted")
@@ -247,6 +271,8 @@ class Receiver:
             kind = header["kind"]
             if record["ended"] or kind in record["artifacts"] or header["trial"] != record["result"]["trial"]:
                 raise ValueError("duplicate/late blob or trial mismatch")
+            if kind not in expected_artifacts(record["result"]):
+                raise ValueError("blob the frame record does not announce")
             if type(header.get("bytes")) is not int or not 0 < header["bytes"] == record["result"][kind + "_bytes"]:
                 raise ValueError("blob size disagrees with inference record")
             if not isinstance(header.get("fnv1a"), str) or not re.fullmatch(r"[0-9a-f]{8}", header["fnv1a"]):
@@ -278,8 +304,11 @@ class Receiver:
             row = self.frames[key]
             if ending["trial"] != row["result"]["trial"] or type(ending.get("transfer_complete")) is not bool:
                 raise ValueError("invalid frame ending")
-            expected = {kind for kind in ("jpeg", "input") if row["result"][kind + "_bytes"]}
-            row["complete"] = ending["transfer_complete"] and set(row["artifacts"]) == expected
+            cancelled = ending.get("transfer_cancelled", False)
+            if type(cancelled) is not bool or (cancelled and ending["transfer_complete"]):
+                raise ValueError("invalid transfer cancellation flag")
+            row["cancelled"] = cancelled
+            row["complete"] = ending["transfer_complete"] and set(row["artifacts"]) == expected_artifacts(row["result"])
             row["ended"] = True
             row["ending"] = ending
             self.emit(frame_end=ending, received_complete=row["complete"])
@@ -322,7 +351,7 @@ class Receiver:
         if self.buffer or self.discard_line:
             self.error("recording ended with partial serial line")
         for row in self.frames.values():
-            if not row["complete"]:
+            if not row["complete"] and not row.get("cancelled"):
                 self.error("incomplete frame: " + row["stem"])
             (self.root / (row["stem"] + ".received.json")).write_text(json.dumps(row, indent=2, allow_nan=False) + "\n")
         for (boot, test), row in self.output_tests.items():
@@ -333,9 +362,12 @@ class Receiver:
                 self.error(f"injected detection lacks terminal event: {boot}/{number}")
         summary = {
             "schema": 1, "frames": len(self.frames),
-            "complete_valid_pairs": sum(row["complete"] and row["result"]["valid"] for row in self.frames.values()),
+            "complete_valid_pairs": sum(row["complete"] and row["result"]["valid"] and "input" in row["artifacts"] for row in self.frames.values()),
+            "complete_valid_frames": sum(row["complete"] and row["result"]["valid"] for row in self.frames.values()),
             "invalid_inferences": sum(not row["result"]["valid"] for row in self.frames.values()),
             "incomplete_frames": sum(not row["complete"] for row in self.frames.values()),
+            "cancelled_transfers": sum(bool(row.get("cancelled")) for row in self.frames.values()),
+            "frames_without_input": sum(bool(row["ended"] and "input" not in expected_artifacts(row["result"])) for row in self.frames.values()),
             "output_tests_started": len(self.output_tests),
             "output_tests_completed": sum(bool(row["end"] and row["end"]["event"] == "completed") for row in self.output_tests.values()),
             "output_tests_cancelled": sum(bool(row["end"] and row["end"]["event"] == "cancelled") for row in self.output_tests.values()),
@@ -425,7 +457,7 @@ def main(argv=None):
                 except EOFError:
                     pending.put("QUIT")
             threading.Thread(target=console, daemon=True).start()
-            print("Commands: CAPTURE 1..600, MODE MANUAL, MODE PIR, LIGHT AMBIENT, LIGHT WHITE, TEST OUTPUT, INJECT DEER, ARM, DISARM, STOP, STATUS")
+            print("Commands: CAPTURE 1..600, MODE MANUAL, MODE PIR, LIGHT AMBIENT, LIGHT WHITE, RECORD FULL, RECORD JPEG, TEST OUTPUT, INJECT DEER, ARM, DISARM, STOP, STATUS")
             print("MARK description writes a local marker; QUIT sends STOP and closes recording. Boot is manual/disarmed.")
             device.write(b"STATUS\n")
             try:

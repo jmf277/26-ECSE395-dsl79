@@ -27,8 +27,8 @@ void captureLightingChecks() {
   assert(!t.illuminated&&c.beginCapture(t,7000000));
   assert(!c.tick(7000001).white&&c.endCapture(t,7000002));
   assert(!c.commit(t,true,1,7000003).present);c.release(t,7000004);
-  // Light selection also follows a PIR ticket; it does not depend on ARM.
-  assert(c.setLighting(Lighting::White));c.setMode(Mode::Pir);
+  // Light selection also follows a PIR ticket. A rise starts a trial only once armed.
+  assert(c.setLighting(Lighting::White));c.setMode(Mode::Pir);assert(c.arm(true));
   assert(!c.pollPir(false,Controller::warmupUs));assert(c.pollPir(true,Controller::warmupUs+1));
   t=c.take();assert(t.pir&&t.illuminated&&c.beginCapture(t,Controller::warmupUs+2));
   c.arm(false);assert(!c.tick(Controller::warmupUs+3).white);c.release(t,Controller::warmupUs+4);
@@ -54,8 +54,37 @@ void independentOutputChecks() {
   assert(!c.tick(6000008).tone);assert(c.takeOutputTestStart()==id+2);
   end=c.takeOutputTestEnd();assert(end.id==id+2&&!end.completed);
 }
+void sensorPauseAndRecordingChecks() {
+  Controller c(.85f);
+  const int64_t w=Controller::warmupUs;
+  // An unconfirmed sensor-started trial sets the 120 s pause.
+  c.setMode(Mode::Pir);assert(c.arm(true));
+  assert(!c.pollPir(false,w)&&c.pollPir(true,w+1));
+  for(int i=0;i<10;++i){auto t=c.take();assert(c.commit(t,true,0,w+10+i).accepted);c.release(t,w+10+i);}
+  const int64_t until=c.cooldownUntil;assert(until==w+19+Controller::cooldownUs);
+  // STOP, DISARM and mode changes keep it; it ends only when it runs out.
+  c.stop();assert(c.cooldownUntil==until);c.setMode(Mode::Pir);assert(c.cooldownUntil==until);
+  c.arm(false);assert(c.cooldownUntil==until);assert(c.arm(true));
+  assert(!c.pollPir(false,until-3)&&!c.pollPir(true,until-2)&&!c.busy);
+  assert(c.pollPir(true,until)&&c.busy&&!c.cooldownUntil); // a still-HIGH sensor at expiry starts
+  c.stop();
+  // In manual mode the pause still runs out on time.
+  Controller m(.85f);m.setMode(Mode::Pir);assert(m.arm(true));
+  assert(!m.pollPir(false,w)&&m.pollPir(true,w+1));
+  for(int i=0;i<10;++i){auto t=m.take();m.commit(t,true,0,w+10+i);m.release(t,w+10+i);}
+  const int64_t mu=m.cooldownUntil;m.setMode(Mode::Manual);
+  assert(!m.pollPir(true,mu-1)&&m.cooldownUntil==mu);assert(!m.pollPir(true,mu)&&!m.cooldownUntil);
+  // The recording level follows the ticket and changes only while idle.
+  Controller r(.85f);
+  assert(r.recordInput&&r.setRecording(false)&&r.startManual(2));
+  auto t=r.take();assert(!t.recordInput&&!r.setRecording(true));
+  r.commit(t,true,.1f,1);r.release(t,2);t=r.take();assert(!t.recordInput);r.commit(t,true,.1f,3);r.release(t,4);
+  assert(r.setRecording(true)&&r.startManual(1));t=r.take();assert(t.recordInput);r.commit(t,true,.1f,5);r.release(t,6);
+  assert(parseCommand("RECORD FULL").kind==CommandKind::RecordFull&&parseCommand("RECORD JPEG").kind==CommandKind::RecordJpeg);
+  for(const char* bad:{"RECORD","RECORD jpeg","RECORD MIXED","RECORD FULL extra"})assert(parseCommand(bad).kind==CommandKind::Invalid);
+}
 int main() {
-  captureLightingChecks();independentOutputChecks();
+  captureLightingChecks();independentOutputChecks();sensorPauseAndRecordingChecks();
   Controller c(.85f);
   assert(!c.take().generation && !c.armed && c.mode==Mode::Manual);
   assert(!c.startManual(0) && !c.startManual(601));
@@ -81,7 +110,10 @@ int main() {
   assert(!c.pollPir(false,10) && !c.pollPir(true,20));
   assert(!c.pollPir(true,Controller::warmupUs));
   assert(!c.pollPir(false,Controller::warmupUs+1));
-  assert(c.pollPir(true,Controller::warmupUs+2));
+  assert(!c.pollPir(true,Controller::warmupUs+2)&&c.pirHigh&&!c.busy); // disarmed: a rise starts nothing
+  assert(c.arm(true)&&!c.pollPir(true,Controller::warmupUs+3));      // held HIGH: needs LOW, then HIGH
+  assert(!c.pollPir(false,Controller::warmupUs+4)&&!c.pirHigh);
+  assert(c.pollPir(true,Controller::warmupUs+5));
   for(int i=0;i<10;++i){a=c.take();assert(a.pir);assert(c.commit(a,true,0,70000000+i).accepted);c.release(a,70000000+i);}
   assert(!c.busy && c.cooldownUntil>70000000);
   assert(!c.pollPir(true,c.cooldownUntil-1));assert(c.pollPir(true,c.cooldownUntil));
@@ -97,5 +129,5 @@ int main() {
   assert(parseCommand("LIGHT AMBIENT").kind==CommandKind::Ambient&&parseCommand("LIGHT WHITE").kind==CommandKind::White);
   assert(parseCommand("TEST OUTPUT").kind==CommandKind::OutputTest);
   for(int64_t i=0;i<=5500000;i+=10000){auto out=deterrent::pattern(i);assert(out.tone==(i<5500000&&i%2000000<1500000));assert(out.white==(i<5500000&&(i/100000)%2==0));}
-  std::puts("PASS: trial scheduling, isolated confirmation, cancellation, PIR warm-up/rearming/cooldown, long-transfer alarm completion, capture-light isolation/watchdog, independent output-test lifecycle, command boundaries and waveform");
+  std::puts("PASS: trial scheduling, isolated confirmation, cancellation, PIR warm-up/arming/rearming/cooldown, pause kept across STOP and mode changes, recording level, long-transfer alarm completion, capture-light isolation/watchdog, independent output-test lifecycle, command boundaries and waveform");
 }

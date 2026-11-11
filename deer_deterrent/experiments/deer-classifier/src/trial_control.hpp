@@ -8,7 +8,7 @@ namespace recognition_trial {
 enum class Mode { Manual, Pir };
 enum class Lighting { Ambient, White };
 enum class AlarmSource { None, Recognition, OutputTest, InjectedDetection };
-struct Ticket { uint32_t generation = 0, trial = 0, frame = 0, within = 0; bool pir = false, illuminated = false; };
+struct Ticket { uint32_t generation = 0, trial = 0, frame = 0, within = 0; bool pir = false, illuminated = false, recordInput = true; };
 struct Decision { bool accepted = false, present = false, alarmStarted = false; };
 struct OutputTestEnd { uint32_t id = 0; bool completed = false; };
 struct InjectionStart { uint32_t id = 0; int64_t alarmStartUs = -1; };
@@ -26,6 +26,8 @@ public:
     Lighting lighting = Lighting::Ambient;
     AlarmSource alarmSource = AlarmSource::None;
     bool armed = false, busy = false, inFlight = false;
+    bool recordInput = true;  // send each frame's exact model input (RECORD FULL)
+    bool pirHigh = false;     // the sensor level last read
     uint32_t trial = 0, frame = 0, within = 0, requested = 0;
     int64_t alarmStart = -1, cooldownUntil = 0;
     uint32_t outputTestId = 0, injectionId = 0;
@@ -34,7 +36,9 @@ public:
         finishCommanded(false, -1);
         ++generation_; busy = false; armed = false; alarmStart = -1;
         alarmSource = AlarmSource::None; captureLightUntil_ = 0;
-        cooldownUntil = 0; previousPir_ = true; gate_.reset();
+        previousPir_ = true; gate_.reset();
+        // The 120 s pause after an unconfirmed sensor-started trial is kept: it
+        // ends only when it runs out, so STOP, DISARM and MODE do not clear it.
         // inFlight remains true until that physical acquisition is released.
     }
     void stop() { cancel(); mode = Mode::Manual; }
@@ -43,6 +47,11 @@ public:
         if (busy || inFlight || alarmStart >= 0) return false;
         lighting = value; return true;
     }
+    bool setRecording(bool full) {
+        if (busy || inFlight || alarmStart >= 0) return false;
+        recordInput = full; return true;
+    }
+    int64_t warmupEndUs() const { return bootUs_ + warmupUs; }
     bool startOutputTest(int64_t now) {
         if (mode != Mode::Manual || armed || busy || inFlight || alarmStart >= 0 || pendingTestEnd_.id) return false;
         ++outputTestId; alarmStart = now; alarmSource = AlarmSource::OutputTest;
@@ -80,18 +89,21 @@ public:
     }
     bool pollPir(bool high, int64_t now) {
         tick(now);
+        pirHigh = high;
+        if (cooldownUntil && now >= cooldownUntil && mode != Mode::Pir) cooldownUntil = 0;
         if (mode != Mode::Pir) return false;
         if (busy || inFlight || alarmStart >= 0) { previousPir_ = true; return false; }
         const bool expired = cooldownUntil && now >= cooldownUntil;
         if (expired) cooldownUntil = 0;
-        const bool startNow = now >= bootUs_ + warmupUs && !cooldownUntil && high && (!previousPir_ || expired);
+        // A rise starts a trial only once armed; MODE PIR disarms, so ARM follows it.
+        const bool startNow = armed && now >= bootUs_ + warmupUs && !cooldownUntil && high && (!previousPir_ || expired);
         previousPir_ = high;
         return startNow && start(10);
     }
     Ticket take() {
         if (!busy || inFlight || alarmStart >= 0 || within >= requested) return {};
         inFlight = true; ++within; ++frame;
-        return {generation_, trial, frame, within, mode == Mode::Pir, lighting == Lighting::White};
+        return {generation_, trial, frame, within, mode == Mode::Pir, lighting == Lighting::White, recordInput};
     }
     bool valid(Ticket t) const { return t.generation && t.generation == generation_ && busy && inFlight; }
     bool beginCapture(Ticket t, int64_t now) {
