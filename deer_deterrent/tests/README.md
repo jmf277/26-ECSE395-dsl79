@@ -22,6 +22,11 @@ No device/transport errors in these runs. The first small-change run reached onl
 
 Full chronology, partial-recording caveats and earlier numeric results are preserved in [HISTORY.md](HISTORY.md). Earlier thresholds/firmware descriptions there are historical. Camera movement requires a new reference. No matched flash-off comparison quantifies illumination gain.
 
+## Recorded recognition trials and replay
+
+- [Recorded recognition trials](recognition/README.md): the recognition trial program's sessions of November 4, each with its pictures, exact model inputs, records and gallery, and the three flash images that made them.
+- [Replay of the detector records](replay_verification/README.md): the saved detector sessions under `captures` replayed through the growth gate's own source.
+
 ## Power and outdoor evidence status
 
 User confirmed complete battery-only operation in conversation. No host recording can prove the offline segment, and no measured current/runtime was provided. Outdoor work was to be self-documented; no observations or field accuracy claims have been added. Use [the log template](../handoff/OUTDOOR_TEST_LOG.csv) when those results arrive.

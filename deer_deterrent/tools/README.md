@@ -1,14 +1,15 @@
 # Recording and replay tools
 
-Use these tools to retain serial evidence, check photo transfers, and replay compatible detector windows through the firmware's shared C++ growth gate. They do not estimate independent accuracy, identify animal species, or verify physical sound/light output from command messages.
+Use these tools to retain serial evidence, check photo transfers, and replay compatible detector windows through the firmware's shared C++ growth gate. `record_classifier.py` records the recognition trial program's sessions and `laptop_classifier.py` runs the laptop side of the laptop interface program. The tools do not estimate independent accuracy, identify animal species, or verify physical sound/light output from command messages.
 
 ## Requirements
 
 - Python 3.10 or later.
 - A C++17 compiler with GCC/Clang command-line options for replay. `--compiler /path/to/c++` selects a compiler; otherwise `CXX`, then `c++`, is used.
 - `pyserial` only for live recording: `python -m pip install -r tools/requirements.txt`.
+- Pillow for the recognition recorder, the laptop client and their tests: `python -m pip install -r tools/requirements-classifier.txt`, which includes `requirements.txt`.
 
-Run the examples from the repository root. Replay and automated checks do not require a board, PlatformIO, network access, or Python image libraries.
+Run the examples from the repository root. Replay and automated checks do not require a board, PlatformIO or network access.
 
 ## Analyze retained recordings
 
@@ -102,18 +103,26 @@ Schema 2 intentionally replaces ambiguous legacy summary names:
 python -m unittest discover -s tools -p 'test_*.py'
 ```
 
-Tests cover transfer corruption, exact raw-byte retention, partial transfers, duplicate frame IDs after boot, invalid metadata, manifest corruption, missing trigger/end/frame history, first-frame generation continuity, delayed canceled captures, ARM/calibration/policy boundaries, legacy configurations, and native-gate agreement/mismatch. The C++ replay tests require `c++`; the suite explicitly skips them if it is absent. These are host-side software tests. Use the retained corpus command above to check real saved records as well.
+The suite runs 105 tests and needs Pillow. The detector tests cover transfer corruption, exact raw-byte retention, partial transfers, duplicate frame IDs after boot, invalid metadata, manifest corruption, missing trigger/end/frame history, first-frame generation continuity, delayed canceled captures, ARM/calibration/policy boundaries, legacy configurations, and native-gate agreement/mismatch. The C++ replay tests require `c++`; the suite explicitly skips them if it is absent. The recognition recorder and laptop client tests are described below. These are host-side software tests. Use the retained corpus command above to check real saved records as well.
 
 ## Neural recognition recordings
 
-Use `record_classifier.py` with the recognition-trial firmware. It saves the original inference JPEG, the exact pre-run INT8 input, boxes, scores and trial/controller state. Install `requirements-classifier.txt`. See the [recognition guide](../experiments/deer-classifier/README.md) for commands, files and board checks.
+Use `record_classifier.py` with the recognition-trial firmware. It saves the original inference JPEG, the exact pre-run INT8 input, boxes, scores, settings and trial/controller state. Install `requirements-classifier.txt`. See the [recognition guide](../experiments/deer-classifier/README.md) for commands, files and board checks, and [tests/recognition](../tests/recognition/README.md) for the recorded sessions.
 
-`LIGHT AMBIENT` and `LIGHT WHITE` select the next idle trial's capture lighting; the chosen condition appears in each frame record and gallery card. `TEST OUTPUT` requests an independent light/buzzer test while manual, idle and disarmed. Its start and completion/cancellation events are recorded in their own summary counts and gallery section, without generating an image, score or recognition success. A missing terminal event stays incomplete. Record physical observations separately from the controller's reported events.
+```sh
+python tools/record_classifier.py --port COM5 --output tools/captures/d1-full-body-01 --label "D1 full body" --notes "print size, distance, lighting"
+```
 
-The practical `record_photos.py`/`replay_records.py` pipeline continues to handle changed-area/growth records. Neural scores and tensors are not motion percentages; the two protocols and analyses are kept distinct. Both retain raw bytes and explicit incomplete/error records.
+A session first records the board's `STATUS` reply in its manifest and then sends `STOP`, so it starts manual, disarmed and idle; `--keep-state` records without the `STOP`. `MARK description` writes a marker tied to the frame received before it. `QUIT` sends `STOP`, waits for an outstanding frame transfer and a quiet moment, and closes the session. A lost serial port is recorded as an error, and the session still closes with its summary and gallery. Each command is logged after it was sent.
+
+`LIGHT AMBIENT` and `LIGHT WHITE` select the next idle trial's capture lighting, and `RECORD FULL` or `RECORD JPEG` whether each frame's exact model input is sent; both appear in each frame record and gallery card. `TEST OUTPUT` requests an independent light/buzzer test while manual, idle and disarmed, and `INJECT DEER` an injected confirmed detection while armed. Their start and completion/cancellation events are recorded in their own summary counts and gallery sections, without generating an image, score or recognition success. A missing terminal event stays incomplete. Record physical observations separately from the controller's reported events.
+
+The summary keeps recording errors apart from warnings (a box list it cannot check; the frame is kept) and from device log diagnostics (ESP-IDF `E (...)`/`W (...)` lines). A failed transfer gives one error, a transfer cancelled by `STOP` is counted as cancelled, and `trials.csv` lists each trial's frames, highest score and decision. The gallery draws each record's detection boxes and scores over the unchanged JPEG. The manifest is closed with the board's state at the start, the firmware seen, the model hash and the size and SHA-256 of every saved file. The tests cover byte-exact pairing, damaged and cancelled transfers, the recording level, output tests and injected detections, device log lines, a lost port, `QUIT` and the opening state over a stand-in port, markers, the trial table, drawn boxes and the closing manifest.
+
+The practical `record_photos.py`/`replay_records.py` pipeline handles changed-area/growth records. Neural scores and tensors are not motion percentages; the two protocols and analyses are kept distinct. Both retain raw bytes and explicit incomplete/error records.
 
 ## Laptop recognition and verdict return
 
-`laptop_classifier.py` works with the [Wi-Fi laptop-interface firmware](../experiments/camera-wifi-bringup/README.md). It downloads a retained camera JPEG, verifies its size/checksum, runs the existing one-class ESPDet float checkpoint on the computer and posts a verdict bound to the boot/burst/photo identity and checksum. It saves the original JPEG, model/helper hashes, score/boxes, settings, timing and device acknowledgment. Rejected or expired replies remain errors; a controller acknowledgment does not prove physical actuation.
+`laptop_classifier.py` works with the [Wi-Fi laptop-interface firmware](../experiments/camera-wifi-bringup/README.md). It downloads a retained camera JPEG, verifies its size/checksum, runs the existing one-class ESPDet float checkpoint on the computer and posts a verdict bound to the boot/burst/photo identity and checksum. Two deer verdicts among the last three photos confirm, on the board and in the client, which applies `experiments/deer-classifier/temporal_gate.py`. It saves the original JPEG, model/helper hashes, score/boxes, settings, timing, its confirmation and the device acknowledgment. A photo whose download, check, score or reply fails is recorded with its error and passed over; a controller acknowledgment does not prove physical actuation.
 
-Use the model repository's existing compatible Python environment and supply the trained `.pt` checkpoint, its `deer_classifier` directory and the ESP-Detection checkout. No model is downloaded automatically. `--arm` permits responses and `--capture` requests a manual burst; otherwise PIR starts acquisition. The default is disarmed, with a stop/disarm request on exit. See `python tools/laptop_classifier.py --help` for arguments. This network client is distinct from `record_classifier.py`, whose model runs on the ESP32 and transfers exact INT8 inputs over USB.
+Use the model repository's existing compatible Python environment and supply the trained `.pt` checkpoint, its `deer_classifier` directory and the ESP-Detection checkout. No model is downloaded automatically. `--arm` permits responses and `--capture` requests a manual burst once the board is ready and not paused; otherwise PIR starts acquisition. The default is disarmed, with a stop/disarm request on exit. See `python tools/laptop_classifier.py --help` for arguments. This network client is distinct from `record_classifier.py`, whose model runs on the ESP32 and transfers exact INT8 inputs over USB. Its tests run `main()` against an emulated board over loopback HTTP and the predictor's own checks with stand-in model libraries; none runs the trained checkpoint, which is in neither repository.

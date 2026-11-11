@@ -34,4 +34,4 @@ PIR OUT → D5/GPIO5; shared ground. Preserve the existing tested PIR supply arr
 | B | MOSI | 35 |
 | GND | Shared GND | Ground |
 
-New firmware skips TFT initialization, holds TFT CS7 HIGH and backlight45 LOW. GPIO21 remains enabled. Camera/PIR/buzzer wiring is unchanged. Do not enable TFT code while the RGB uses its SPI pins.
+The current firmware, the night-controlled detector, the recognition trial program and the laptop interface program skip TFT initialization and hold TFT CS7 HIGH and backlight45 LOW. GPIO21 remains enabled. Camera/PIR/buzzer wiring is unchanged. Do not enable TFT code while the RGB uses its SPI pins.

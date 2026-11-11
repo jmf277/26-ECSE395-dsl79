@@ -18,6 +18,10 @@ The last successful normal upload used PlatformIO environment `classifier_test` 
 | Understand exact trigger thresholds | [Current firmware README](../firmware/motion-size/README.md) and [approach_gate.hpp](../firmware/motion-size/src/approach_gate.hpp) |
 | Review proof and limitations | [Test results](../tests/README.md), then open `tests/index.html` locally |
 | Troubleshoot or plan next work | [KNOWN_ISSUES.md](KNOWN_ISSUES.md) |
+| Run recorded recognition trials of the deer model | [Recognition trial program](../experiments/deer-classifier/README.md), its [board checks](../experiments/deer-classifier/BOARD_CHECKS.md) and the [recorded trials](../tests/recognition/README.md) |
+| Run laptop recognition with the board's light and buzzer | [Laptop interface program](../experiments/camera-wifi-bringup/README.md) |
+| Look at automatic night operation (computer-tested, never run on the unit) | [Night-controlled detector](../firmware/night-control/README.md) |
+| Record, replay and analyze sessions | [Tools guide](../tools/README.md) |
 | Document outdoor testing | [OUTDOOR_TEST_LOG.csv](OUTDOOR_TEST_LOG.csv) |
 
 ## Findings to carry forward
