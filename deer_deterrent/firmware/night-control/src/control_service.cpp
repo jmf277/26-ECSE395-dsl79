@@ -53,10 +53,10 @@ void apply(const Snapshot& s) {
     previousAlarm=s.alarmActive;
     if(!outputsReady) return;
     if(!haveOutputs||lastOutputs.white!=s.outputs.white) {
-        for(auto pin:{GPIO_NUM_13,GPIO_NUM_36,GPIO_NUM_35}) gpio_set_level(pin,s.outputs.white);
+        for(int pin:deterrent::whitePins) gpio_set_level(static_cast<gpio_num_t>(pin),s.outputs.white);
     }
     if(!haveOutputs||lastOutputs.tone!=s.outputs.tone) {
-        ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_2,s.outputs.tone?512:0);
+        ledc_set_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_2,s.outputs.tone?deterrent::toneDuty:0);
         ledc_update_duty(LEDC_LOW_SPEED_MODE,LEDC_CHANNEL_2);
     }
     lastOutputs=s.outputs;haveOutputs=true;
@@ -275,10 +275,10 @@ bool initialize() {
     coreMutex=xSemaphoreCreateMutex();settingsMutex=xSemaphoreCreateMutex();
     if(!coreMutex||!settingsMutex) return false;
     ledc_timer_config_t timerConfig={};timerConfig.speed_mode=LEDC_LOW_SPEED_MODE;
-    timerConfig.duty_resolution=LEDC_TIMER_10_BIT;timerConfig.timer_num=LEDC_TIMER_1;
-    timerConfig.freq_hz=2000;timerConfig.clk_cfg=LEDC_AUTO_CLK;
+    timerConfig.duty_resolution=static_cast<ledc_timer_bit_t>(deterrent::toneResolutionBits);timerConfig.timer_num=LEDC_TIMER_1;
+    timerConfig.freq_hz=deterrent::toneHz;timerConfig.clk_cfg=LEDC_AUTO_CLK;
     if(ledc_timer_config(&timerConfig)!=ESP_OK) return false;
-    ledc_channel_config_t channel={};channel.gpio_num=10;channel.speed_mode=LEDC_LOW_SPEED_MODE;
+    ledc_channel_config_t channel={};channel.gpio_num=deterrent::buzzerPin;channel.speed_mode=LEDC_LOW_SPEED_MODE;
     channel.channel=LEDC_CHANNEL_2;channel.timer_sel=LEDC_TIMER_1;channel.duty=0;
     if(ledc_channel_config(&channel)!=ESP_OK) return false;
     outputsReady=true;

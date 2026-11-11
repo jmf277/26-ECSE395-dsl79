@@ -171,8 +171,8 @@ void line(const char* format, ...) {
 }
 void applyOutputs(deterrent::Outputs value) {
   if (!hardwareReady) return;
-  for (auto pin : {GPIO_NUM_13, GPIO_NUM_36, GPIO_NUM_35}) gpio_set_level(pin, value.white);
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, value.tone ? 512 : 0);
+  for (int pin : deterrent::whitePins) gpio_set_level(static_cast<gpio_num_t>(pin), value.white);
+  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, value.tone ? deterrent::toneDuty : 0);
   ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2);
 }
 void outputTick(void*) {
@@ -181,18 +181,19 @@ void outputTick(void*) {
   applyOutputs(controller.tick(esp_timer_get_time()));
 }
 bool initializeOutputs() {
-  for (auto pin : {GPIO_NUM_13, GPIO_NUM_36, GPIO_NUM_35, GPIO_NUM_10}) {
+  for (int number : {deterrent::whitePins[0], deterrent::whitePins[1], deterrent::whitePins[2], deterrent::buzzerPin}) {
+    const auto pin = static_cast<gpio_num_t>(number);
     gpio_set_level(pin, 0);
     if (gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK) return false;
   }
   gpio_set_direction(GPIO_NUM_5, GPIO_MODE_INPUT);
   gpio_set_pull_mode(GPIO_NUM_5, GPIO_PULLDOWN_ONLY);
   ledc_timer_config_t timer{};
-  timer.speed_mode=LEDC_LOW_SPEED_MODE; timer.duty_resolution=LEDC_TIMER_10_BIT;
-  timer.timer_num=LEDC_TIMER_1; timer.freq_hz=2000; timer.clk_cfg=LEDC_AUTO_CLK;
+  timer.speed_mode=LEDC_LOW_SPEED_MODE; timer.duty_resolution=static_cast<ledc_timer_bit_t>(deterrent::toneResolutionBits);
+  timer.timer_num=LEDC_TIMER_1; timer.freq_hz=deterrent::toneHz; timer.clk_cfg=LEDC_AUTO_CLK;
   if (ledc_timer_config(&timer) != ESP_OK) return false;
   ledc_channel_config_t channel{};
-  channel.gpio_num=10; channel.speed_mode=LEDC_LOW_SPEED_MODE;
+  channel.gpio_num=deterrent::buzzerPin; channel.speed_mode=LEDC_LOW_SPEED_MODE;
   channel.channel=LEDC_CHANNEL_2; channel.timer_sel=LEDC_TIMER_1; channel.duty=0;
   if (ledc_channel_config(&channel) != ESP_OK) return false;
   hardwareReady = true;

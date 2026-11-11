@@ -94,12 +94,13 @@ bool algorithmSelftest() {
 }
 
 void cameraPowerSetup() {
-    for(auto pair : {std::pair<int,int>{7,1},{45,0},{21,1},{10,0},{37,0}}) {
+    for(auto pair : {std::pair<int,int>{7,1},{45,0},{21,1},{deterrent::buzzerPin,0},{37,0}}) {
         gpio_set_level(static_cast<gpio_num_t>(pair.first),pair.second);
         gpio_set_direction(static_cast<gpio_num_t>(pair.first),GPIO_MODE_OUTPUT);
     }
     // TFT CS remains HIGH and backlight LOW while its SPI pins drive RGB.
-    for(auto pin : {GPIO_NUM_13,GPIO_NUM_36,GPIO_NUM_35}) {
+    for(int number : deterrent::whitePins) {
+        const auto pin=static_cast<gpio_num_t>(number);
         gpio_set_level(pin,0);
         gpio_set_direction(pin,GPIO_MODE_OUTPUT);
     }

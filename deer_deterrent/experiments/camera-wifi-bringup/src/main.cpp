@@ -8,7 +8,7 @@
 #include "reply_gate.hpp"
 
 constexpr uint8_t PIR_PIN = 5;
-constexpr uint8_t BUZZER_PIN = 10;
+constexpr uint8_t BUZZER_PIN = deterrent::buzzerPin;
 constexpr unsigned long PIR_WARMUP_MS = 60000;
 constexpr char AP_NAME[] = "Feather-Camera-Test";
 constexpr char AP_PASSWORD[] = "ChangeMe123";
@@ -24,8 +24,8 @@ public:
 };
 void applyOutputs(deterrent::Outputs state) {
   if(!outputsReady)return;
-  for(auto pin:{13,36,35})digitalWrite(pin,state.white?HIGH:LOW);
-  ledcWrite(2,state.tone?512:0);
+  for(int pin:deterrent::whitePins)digitalWrite(pin,state.white?HIGH:LOW);
+  ledcWrite(2,state.tone?deterrent::toneDuty:0);
 }
 void outputTick(void*) {
   Lock lock(replyMutex);
@@ -217,8 +217,8 @@ void setup() {
   pinMode(7,OUTPUT);digitalWrite(7,HIGH);
   pinMode(45,OUTPUT);digitalWrite(45,LOW);
   pinMode(21,OUTPUT);digitalWrite(21,HIGH);
-  for(auto pin:{13,36,35}){pinMode(pin,OUTPUT);digitalWrite(pin,LOW);}
-  if(ledcSetup(2,2000,10)==0)return;
+  for(int pin:deterrent::whitePins){pinMode(pin,OUTPUT);digitalWrite(pin,LOW);}
+  if(ledcSetup(2,deterrent::toneHz,deterrent::toneResolutionBits)==0)return;
   ledcAttachPin(BUZZER_PIN,2);outputsReady=true;
   esp_timer_create_args_t timerArgs={};timerArgs.callback=outputTick;timerArgs.name="laptop_alarm";
   esp_timer_handle_t timer=nullptr;
