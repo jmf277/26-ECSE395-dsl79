@@ -1,0 +1,95 @@
+{
+  "stem": "a60fdd6cc327c384-trial-000006-frame-000065",
+  "result": {
+    "schema": 1,
+    "boot": "a60fdd6cc327c384",
+    "trial": 6,
+    "frame": 65,
+    "within": 15,
+    "trigger": "manual",
+    "model_sha256": "f4baa40014b3b5476e05e5007ab6e83a1a19bdc680c12dba86761841e02fc450",
+    "valid": true,
+    "committed": true,
+    "present": false,
+    "armed": false,
+    "alarm_started": false,
+    "threshold": 0.850000023841858,
+    "window": 3,
+    "required": 2,
+    "score": 0.5,
+    "error": "",
+    "lighting": "white",
+    "capture_lighting_ok": true,
+    "light_settle_ms": 120,
+    "discarded_frames_required": 2,
+    "jpeg_bytes": 6642,
+    "camera_width": 320,
+    "camera_height": 240,
+    "input_bytes": 150528,
+    "input_dtype": "int8",
+    "input_layout": "NHWC",
+    "input_shape": [
+      1,
+      224,
+      224,
+      3
+    ],
+    "input_exponent": -7,
+    "input_scaling": "real = signed_byte * 2**input_exponent; RGB normalization /255; letterbox 114",
+    "started_us": 1683908165,
+    "acquired_us": 1684183453,
+    "inferred_us": 1684609003,
+    "capture_us": 275288,
+    "decode_us": 26706,
+    "preprocessing_us": 18183,
+    "input_copy_us": 16326,
+    "model_us": 362931,
+    "postprocessing_us": 1351,
+    "box_coordinates": "left,top,right,bottom in original camera image pixels",
+    "boxes": [
+      {
+        "category": 0,
+        "score": 0.5,
+        "box": [
+          218,
+          208,
+          272,
+          239
+        ]
+      },
+      {
+        "category": 0,
+        "score": 0.18242552876472473,
+        "box": [
+          219,
+          211,
+          272,
+          239
+        ]
+      }
+    ]
+  },
+  "artifacts": {
+    "jpeg": {
+      "file": "a60fdd6cc327c384-trial-000006-frame-000065.jpg",
+      "bytes": 6642,
+      "fnv1a": "eba184ab",
+      "sha256": "010bb9a89ddc46659c92e0e18d9dbe4d3741d0d91c613c69e35d497bea8b8ecb"
+    },
+    "input": {
+      "file": "a60fdd6cc327c384-trial-000006-frame-000065.input.i8",
+      "bytes": 150528,
+      "fnv1a": "c44c5bda",
+      "sha256": "526340a471c838ba73b7f07d208169f30bee3d99cfed34f109488d2123277cde"
+    }
+  },
+  "ended": true,
+  "complete": true,
+  "ending": {
+    "boot": "a60fdd6cc327c384",
+    "trial": 6,
+    "frame": 65,
+    "transfer_complete": true,
+    "transfer_us": 889593
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "stem": "a60fdd6cc327c384-trial-000006-frame-000064",
+  "result": {
+    "schema": 1,
+    "boot": "a60fdd6cc327c384",
+    "trial": 6,
+    "frame": 64,
+    "within": 14,
+    "trigger": "manual",
+    "model_sha256": "f4baa40014b3b5476e05e5007ab6e83a1a19bdc680c12dba86761841e02fc450",
+    "valid": true,
+    "committed": true,
+    "present": false,
+    "armed": false,
+    "alarm_started": false,
+    "threshold": 0.850000023841858,
+    "window": 3,
+    "required": 2,
+    "score": 0.43782350420951843,
+    "error": "",
+    "lighting": "white",
+    "capture_lighting_ok": true,
+    "light_settle_ms": 120,
+    "discarded_frames_required": 2,
+    "jpeg_bytes": 6617,
+    "camera_width": 320,
+    "camera_height": 240,
+    "input_bytes": 150528,
+    "input_dtype": "int8",
+    "input_layout": "NHWC",
+    "input_shape": [
+      1,
+      224,
+      224,
+      3
+    ],
+    "input_exponent": -7,
+    "input_scaling": "real = signed_byte * 2**input_exponent; RGB normalization /255; letterbox 114",
+    "started_us": 1681788165,
+    "acquired_us": 1682066336,
+    "inferred_us": 1682491994,
+    "capture_us": 278171,
+    "decode_us": 26688,
+    "preprocessing_us": 18288,
+    "input_copy_us": 16242,
+    "model_us": 363266,
+    "postprocessing_us": 1122,
+    "box_coordinates": "left,top,right,bottom in original camera image pixels",
+    "boxes": [
+      {
+        "category": 0,
+        "score": 0.43782350420951843,
+        "box": [
+          219,
+          209,
+          272,
+          239
+        ]
+      },
+      {
+        "category": 0,
+        "score": 0.18242552876472473,
+        "box": [
+          219,
+          213,
+          275,
+          239
+        ]
+      }
+    ]
+  },
+  "artifacts": {
+    "jpeg": {
+      "file": "a60fdd6cc327c384-trial-000006-frame-000064.jpg",
+      "bytes": 6617,
+      "fnv1a": "97132255",
+      "sha256": "136cd084b0303e83a8c77f015e7c2470a269c510e1218cd02897a03c338079c2"
+    },
+    "input": {
+      "file": "a60fdd6cc327c384-trial-000006-frame-000064.input.i8",
+      "bytes": 150528,
+      "fnv1a": "a6682444",
+      "sha256": "b1e5f04e2935f9d64fbc7a710d63166553ab9ec77b346c17953ade864711d5b4"
+    }
+  },
+  "ended": true,
+  "complete": true,
+  "ending": {
+    "boot": "a60fdd6cc327c384",
+    "trial": 6,
+    "frame": 64,
+    "transfer_complete": true,
+    "transfer_us": 896419
+  }
+}

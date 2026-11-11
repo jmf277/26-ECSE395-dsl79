@@ -1,0 +1,93 @@
+{"received_utc": "2026-11-05T01:12:02.600548+00:00", "device_message": "ESP-ROM:esp32s3-20210327"}
+{"received_utc": "2026-11-05T01:12:02.600689+00:00", "device_message": "Build:Mar 27 2021"}
+{"received_utc": "2026-11-05T01:12:02.600734+00:00", "device_message": "rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)"}
+{"received_utc": "2026-11-05T01:12:02.600820+00:00", "device_message": "Saved PC:0x4037ce16"}
+{"received_utc": "2026-11-05T01:12:02.600857+00:00", "device_message": "SPIWP:0xee"}
+{"received_utc": "2026-11-05T01:12:02.600969+00:00", "device_message": "mode:DIO, clock div:1"}
+{"received_utc": "2026-11-05T01:12:02.601097+00:00", "device_message": "load:0x3fce2820,len:0x1564"}
+{"received_utc": "2026-11-05T01:12:02.601146+00:00", "device_message": "load:0x403c8700,len:0x4"}
+{"received_utc": "2026-11-05T01:12:02.601178+00:00", "device_message": "load:0x403c8704,len:0xc80"}
+{"received_utc": "2026-11-05T01:12:02.601202+00:00", "device_message": "load:0x403cb700,len:0x2ee0"}
+{"received_utc": "2026-11-05T01:12:02.601223+00:00", "device_message": "entry 0x403c8914"}
+{"received_utc": "2026-11-05T01:12:02.601245+00:00", "device_message": "I (26) boot: ESP-IDF v5.4.2 2nd stage bootloader"}
+{"received_utc": "2026-11-05T01:12:02.601269+00:00", "device_message": "I (27) boot: compile time Nov  4 2026 16:49:12"}
+{"received_utc": "2026-11-05T01:12:02.601292+00:00", "device_message": "I (27) boot: Multicore bootloader"}
+{"received_utc": "2026-11-05T01:12:02.601323+00:00", "device_message": "I (27) boot: chip revision: v0.2"}
+{"received_utc": "2026-11-05T01:12:02.601349+00:00", "device_message": "I (27) boot: efuse block revision: v1.4"}
+{"received_utc": "2026-11-05T01:12:02.601404+00:00", "device_message": "I (27) boot.esp32s3: Boot SPI Speed : 80MHz"}
+{"received_utc": "2026-11-05T01:12:02.601441+00:00", "device_message": "I (27) boot.esp32s3: SPI Mode       : DIO"}
+{"received_utc": "2026-11-05T01:12:02.601466+00:00", "device_message": "I (28) boot.esp32s3: SPI Flash Size : 4MB"}
+{"received_utc": "2026-11-05T01:12:02.601488+00:00", "device_message": "I (28) boot: Enabling RNG early entropy source..."}
+{"received_utc": "2026-11-05T01:12:02.601511+00:00", "device_message": "I (28) boot: Partition Table:"}
+{"received_utc": "2026-11-05T01:12:02.601531+00:00", "device_message": "I (28) boot: ## Label            Usage          Type ST Offset   Length"}
+{"received_utc": "2026-11-05T01:12:02.601554+00:00", "device_message": "I (29) boot:  0 nvs              WiFi data        01 02 00009000 00006000"}
+{"received_utc": "2026-11-05T01:12:02.601573+00:00", "device_message": "I (29) boot:  1 phy_init         RF data          01 01 0000f000 00001000"}
+{"received_utc": "2026-11-05T01:12:02.601593+00:00", "device_message": "I (29) boot:  2 factory          factory app      00 00 00010000 003f0000"}
+{"received_utc": "2026-11-05T01:12:02.601611+00:00", "device_message": "I (30) boot: End of partition table"}
+{"received_utc": "2026-11-05T01:12:02.601631+00:00", "device_message": "I (30) esp_image: segment 0: paddr=00010020 vaddr=3c130020 size=96108h (614664) map"}
+{"received_utc": "2026-11-05T01:12:02.706831+00:00", "device_message": "I (139) esp_image: segment 1: paddr=000a6130 vaddr=3fc97100 size=051c0h ( 20928) load"}
+{"received_utc": "2026-11-05T01:12:02.706931+00:00", "device_message": "I (143) esp_image: segment 2: paddr=000ab2f8 vaddr=40374000 size=04d20h ( 19744) load"}
+{"received_utc": "2026-11-05T01:12:02.706961+00:00", "device_message": "I (148) esp_image: segment 3: paddr=000b0020 vaddr=42000020 size=122548h (1189192) map"}
+{"received_utc": "2026-11-05T01:12:02.917124+00:00", "device_message": "I (358) esp_image: segment 4: paddr=001d2570 vaddr=40378d20 size=0e2d8h ( 58072) load"}
+{"received_utc": "2026-11-05T01:12:02.917254+00:00", "device_message": "I (371) esp_image: segment 5: paddr=001e0850 vaddr=600fe000 size=0001ch (    28) load"}
+{"received_utc": "2026-11-05T01:12:02.917306+00:00", "device_message": "I (379) boot: Loaded app from partition at offset 0x10000"}
+{"received_utc": "2026-11-05T01:12:02.917334+00:00", "device_message": "I (379) boot: Disabling RNG early entropy source..."}
+{"received_utc": "2026-11-05T01:12:02.917410+00:00", "device_message": "I (380) esp_psram: Found 2MB PSRAM device"}
+{"received_utc": "2026-11-05T01:12:02.917431+00:00", "device_message": "I (380) esp_psram: Speed: 80MHz"}
+{"received_utc": "2026-11-05T01:12:02.917544+00:00", "device_message": "I (380) cpu_start: Multicore app"}
+{"received_utc": "2026-11-05T01:12:03.122923+00:00", "device_message": "I (610) esp_psram: SPI SRAM memory test OK"}
+{"received_utc": "2026-11-05T01:12:03.123010+00:00", "device_message": "I (619) cpu_start: Pro cpu start user code"}
+{"received_utc": "2026-11-05T01:12:03.123041+00:00", "device_message": "I (619) cpu_start: cpu freq: 160000000 Hz"}
+{"received_utc": "2026-11-05T01:12:03.123062+00:00", "device_message": "I (619) app_init: Application information:"}
+{"received_utc": "2026-11-05T01:12:03.123083+00:00", "device_message": "I (619) app_init: Project name:     deer_camera_smoke"}
+{"received_utc": "2026-11-05T01:12:03.123103+00:00", "device_message": "I (619) app_init: App version:      1"}
+{"received_utc": "2026-11-05T01:12:03.123123+00:00", "device_message": "I (620) app_init: Compile time:     Nov  4 2026 16:48:41"}
+{"received_utc": "2026-11-05T01:12:03.123143+00:00", "device_message": "I (620) app_init: ELF file SHA256:  7145d186b..."}
+{"received_utc": "2026-11-05T01:12:03.123162+00:00", "device_message": "I (620) app_init: ESP-IDF:          v5.4.2"}
+{"received_utc": "2026-11-05T01:12:03.123181+00:00", "device_message": "I (620) efuse_init: Min chip rev:     v0.0"}
+{"received_utc": "2026-11-05T01:12:03.123202+00:00", "device_message": "I (620) efuse_init: Max chip rev:     v0.99"}
+{"received_utc": "2026-11-05T01:12:03.123220+00:00", "device_message": "I (620) efuse_init: Chip rev:         v0.2"}
+{"received_utc": "2026-11-05T01:12:03.123238+00:00", "device_message": "I (621) heap_init: Initializing. RAM available for dynamic allocation:"}
+{"received_utc": "2026-11-05T01:12:03.123259+00:00", "device_message": "I (621) heap_init: At 3FC9EB10 len 0004AC00 (299 KiB): RAM"}
+{"received_utc": "2026-11-05T01:12:03.123278+00:00", "device_message": "I (621) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM"}
+{"received_utc": "2026-11-05T01:12:03.123297+00:00", "device_message": "I (621) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM"}
+{"received_utc": "2026-11-05T01:12:03.123316+00:00", "device_message": "I (621) heap_init: At 600FE01C len 00001FCC (7 KiB): RTCRAM"}
+{"received_utc": "2026-11-05T01:12:03.123336+00:00", "device_message": "I (622) esp_psram: Adding pool of 2048K of PSRAM memory to heap allocator"}
+{"received_utc": "2026-11-05T01:12:03.123353+00:00", "device_message": "I (623) spi_flash: detected chip: generic"}
+{"received_utc": "2026-11-05T01:12:03.123370+00:00", "device_message": "I (623) spi_flash: flash io: dio"}
+{"received_utc": "2026-11-05T01:12:03.123388+00:00", "device_message": "I (623) sleep_gpio: Configure to isolate all GPIO pins in sleep state"}
+{"received_utc": "2026-11-05T01:12:03.123408+00:00", "device_message": "I (624) sleep_gpio: Enable automatic switching of GPIO sleep configuration"}
+{"received_utc": "2026-11-05T01:12:03.123425+00:00", "device_message": "I (625) main_task: Started on CPU0"}
+{"received_utc": "2026-11-05T01:12:03.228611+00:00", "device_message": "I (635) esp_psram: Reserving pool of 64K of internal memory for DMA/internal allocations"}
+{"received_utc": "2026-11-05T01:12:03.228697+00:00", "device_message": "I (635) main_task: Calling app_main()"}
+{"received_utc": "2026-11-05T01:12:04.686988+00:00", "device_message": "BOOT deer_recorded_trials schema=1 boot=a0897212abe4e05a model_bytes=499712 sha256=f4baa40014b3b5476e05e5007ab6e83a1a19bdc680c12dba86761841e02fc450"}
+{"received_utc": "2026-11-05T01:12:04.687151+00:00", "device_message": "GATE_SELFTEST PASS"}
+{"received_utc": "2026-11-05T01:12:04.687320+00:00", "device_message": "I (2155) s3 ll_cam: DMA Channel=0"}
+{"received_utc": "2026-11-05T01:12:04.687474+00:00", "device_message": "I (2155) cam_hal: cam init ok"}
+{"received_utc": "2026-11-05T01:12:04.687545+00:00", "device_message": "I (2155) sccb-ng: pin_sda 1 pin_scl 41"}
+{"received_utc": "2026-11-05T01:12:04.687616+00:00", "device_message": "I (2155) sccb-ng: sccb_i2c_port=1"}
+{"received_utc": "2026-11-05T01:12:04.687654+00:00", "device_message": "I (2155) gpio: GPIO[37]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0"}
+{"received_utc": "2026-11-05T01:12:04.687693+00:00", "device_message": "I (2185) ov3660: Mismatch PID=0x5640"}
+{"received_utc": "2026-11-05T01:12:04.687730+00:00", "device_message": "I (2185) camera: Camera PID=0x5640 VER=0x00 MIDL=0x00 MIDH=0x00"}
+{"received_utc": "2026-11-05T01:12:04.687764+00:00", "device_message": "I (2185) camera: Detected OV5640 camera"}
+{"received_utc": "2026-11-05T01:12:04.687800+00:00", "device_message": "I (2185) camera: Detected camera at address=0x3c"}
+{"received_utc": "2026-11-05T01:12:05.414400+00:00", "device_message": "I (2865) cam_hal: PSRAM DMA mode disabled"}
+{"received_utc": "2026-11-05T01:12:05.414638+00:00", "device_message": "I (2865) cam_hal: buffer_size: 16384, half_buffer_size: 1024, node_buffer_size: 1024, node_cnt: 16, total_cnt: 15"}
+{"received_utc": "2026-11-05T01:12:05.414718+00:00", "device_message": "I (2865) cam_hal: Allocating 15360 Byte frame buffer in PSRAM"}
+{"received_utc": "2026-11-05T01:12:05.414768+00:00", "device_message": "I (2865) cam_hal: cam config ok"}
+{"received_utc": "2026-11-05T01:12:05.414812+00:00", "device_message": "I (2875) ov5640: Set PLL: bypass: 0, multiplier: 180, sys_div: 4, pre_div: 2, root_2x: 0, pclk_root_div: 2, pclk_manual: 1, pclk_div: 4"}
+{"received_utc": "2026-11-05T01:12:05.414856+00:00", "device_message": "I (2875) ov5640: Calculated XVCLK: 20000000 Hz, REFIN: 10000000 Hz, VCO: 1800000000 Hz, PLL_CLK: 180000000 Hz, SYSCLK: 45000000 Hz, PCLK: 11250000 Hz"}
+{"received_utc": "2026-11-05T01:12:05.725651+00:00", "device_message": "MODEL_SELFTEST SKIP"}
+{"received_utc": "2026-11-05T01:12:05.726077+00:00", "device_message": "W (3135) dl::Model: minimize() will delete unused inference variables, breaking model testing/debugging."}
+{"received_utc": "2026-11-05T01:12:06.034247+00:00", "device_message": "INFERENCE_SELFTEST PASS score=0.0000"}
+{"received_utc": "2026-11-05T01:12:06.867364+00:00", "device_message": "READY boot=a0897212abe4e05a mode=manual armed=0 threshold=0.8500 window=3 required=2 model_input=224x224x3 lighting=ambient commands=CAPTURE_n,MODE_MANUAL,MODE_PIR,LIGHT_AMBIENT,LIGHT_WHITE,TEST_OUTPUT,ARM,DISARM,STOP,STATUS"}
+{"received_utc": "2026-11-05T01:12:06.867744+00:00", "device_message": "TRIAL_STATUS {\"boot\":\"a0897212abe4e05a\",\"command\":\"STATUS\",\"accepted\":true,\"mode\":\"manual\",\"lighting\":\"ambient\",\"armed\":false,\"busy\":false,\"in_flight\":false,\"alarm\":false,\"alarm_source\":\"none\",\"trial\":0,\"attempted\":0,\"requested\":0}"}
+{"received_utc": "2026-11-05T01:12:15.876253+00:00", "host_command": "CAPTURE 1"}
+{"received_utc": "2026-11-05T01:12:15.981109+00:00", "device_message": "TRIAL_STATUS {\"boot\":\"a0897212abe4e05a\",\"command\":\"CAPTURE 1\",\"accepted\":true,\"mode\":\"manual\",\"lighting\":\"ambient\",\"armed\":false,\"busy\":true,\"in_flight\":false,\"alarm\":false,\"alarm_source\":\"none\",\"trial\":1,\"attempted\":0,\"requested\":1}"}
+{"received_utc": "2026-11-05T01:12:16.479921+00:00", "result": {"schema": 1, "boot": "a0897212abe4e05a", "trial": 1, "frame": 1, "within": 1, "trigger": "manual", "model_sha256": "f4baa40014b3b5476e05e5007ab6e83a1a19bdc680c12dba86761841e02fc450", "valid": true, "committed": true, "present": false, "armed": false, "alarm_started": false, "threshold": 0.850000023841858, "window": 3, "required": 2, "score": 0, "error": "", "lighting": "ambient", "capture_lighting_ok": true, "light_settle_ms": 0, "discarded_frames_required": 2, "jpeg_bytes": 5155, "camera_width": 320, "camera_height": 240, "input_bytes": 150528, "input_dtype": "int8", "input_layout": "NHWC", "input_shape": [1, 224, 224, 3], "input_exponent": -7, "input_scaling": "real = signed_byte * 2**input_exponent; RGB normalization /255; letterbox 114", "started_us": 12769044, "acquired_us": 12914937, "inferred_us": 13339194, "capture_us": 145893, "decode_us": 25821, "preprocessing_us": 18474, "input_copy_us": 16440, "model_us": 362870, "postprocessing_us": 597, "box_coordinates": "left,top,right,bottom in original camera image pixels", "boxes": []}}
+{"received_utc": "2026-11-05T01:12:16.576620+00:00", "saved": {"file": "a0897212abe4e05a-trial-000001-frame-000001.jpg", "bytes": 5155, "fnv1a": "3b120cbf", "sha256": "2ff819dba2af86b3c3ca407f745ae0f7392856092b9e36f1989bfa9051c69880"}, "kind": "jpeg"}
+{"received_utc": "2026-11-05T01:12:17.528141+00:00", "saved": {"file": "a0897212abe4e05a-trial-000001-frame-000001.input.i8", "bytes": 150528, "fnv1a": "fcd1c94b", "sha256": "e3058f116e86b6d59c43091f11d0a47ff575abd16d692092fcd33553095df8c4"}, "kind": "input"}
+{"received_utc": "2026-11-05T01:12:17.528286+00:00", "frame_end": {"boot": "a0897212abe4e05a", "trial": 1, "frame": 1, "transfer_complete": true, "transfer_us": 880022}, "received_complete": true}
+{"received_utc": "2026-11-05T01:12:17.528318+00:00", "device_message": "TRIAL_STATUS {\"boot\":\"a0897212abe4e05a\",\"command\":\"TRIAL_FINISHED\",\"accepted\":true,\"mode\":\"manual\",\"lighting\":\"ambient\",\"armed\":false,\"busy\":false,\"in_flight\":false,\"alarm\":false,\"alarm_source\":\"none\",\"trial\":1,\"attempted\":1,\"requested\":1}"}
+{"received_utc": "2026-11-05T01:12:28.425164+00:00", "host_command": "STOP"}
+{"received_utc": "2026-11-05T01:12:28.529799+00:00", "device_message": "TRIAL_STATUS {\"boot\":\"a0897212abe4e05a\",\"command\":\"STOP\",\"accepted\":true,\"mode\":\"manual\",\"lighting\":\"ambient\",\"armed\":false,\"busy\":false,\"in_flight\":false,\"alarm\":false,\"alarm_source\":\"none\",\"trial\":1,\"attempted\":1,\"requested\":1}"}
