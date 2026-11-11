@@ -4,6 +4,7 @@ import json
 import contextlib
 import io
 import itertools
+import os
 import sys
 import types
 from unittest.mock import patch
@@ -370,6 +371,25 @@ class RecordingAnalysisTests(unittest.TestCase):
     def test_duplicate_inputs_do_not_inflate_session_count(self):
         write_events(self.root, [])
         self.assertEqual(discover_sessions([self.root, self.root / "events.jsonl"]), [self.root.resolve()])
+
+    def test_report_names_sessions_relative_to_the_working_directory(self):
+        session = self.root / "captures" / "session-a"
+        session.mkdir(parents=True)
+        write_events(session, [event("STATUS state=ARMED")])
+        previous = Path.cwd()
+        os.chdir(self.root)
+        try:
+            with patch("replay_records.NativeGate") as gate:
+                gate.return_value.provenance.return_value = {}
+                replay = {"checked_frames": 0, "checked_windows": 0, "mismatches": [], "scope": "test",
+                          "gate_sha256": "0", "adapter_sha256": "0"}
+                with patch("replay_records.replay_sessions", return_value=replay):
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(main(["captures", "--output", "report/corpus.json"]), 0)
+        finally:
+            os.chdir(previous)
+        report = json.loads((self.root / "report" / "corpus.json").read_text())
+        self.assertEqual(report["sessions"][0]["source_directory"], "captures/session-a")
 
     def test_report_cannot_overwrite_input_events(self):
         write_events(self.root, [event("STATUS state=ARMED")])

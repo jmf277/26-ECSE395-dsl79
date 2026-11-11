@@ -162,6 +162,15 @@ def discover_sessions(paths):
     return sorted(found)
 
 
+def report_path(path):
+    """A session folder as reported: relative to the working directory when it lies
+    inside it, so reports made from the repository root carry no machine-specific paths."""
+    try:
+        return Path(path).relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
+
 def render_markdown(report):
     replay = report["gate_replay"]
     totals = report["totals"]
@@ -211,6 +220,8 @@ def main(argv=None):
         if args.output and args.markdown and args.output.resolve() == args.markdown.resolve():
             raise ValueError("JSON and Markdown outputs must have different paths")
         sessions = [analyze_session(root) for root in roots]
+        for session in sessions:
+            session["source_directory"] = report_path(session["source_directory"])
         with tempfile.TemporaryDirectory(prefix="deer-gate-replay-") as temporary:
             native = NativeGate(temporary, args.compiler)
             replay = replay_sessions(sessions, native)
