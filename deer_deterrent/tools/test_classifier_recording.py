@@ -6,6 +6,12 @@ import tempfile
 import unittest
 from pathlib import Path
 from PIL import Image
+import sys
+import threading
+import time
+import types
+from unittest import mock
+import record_classifier
 from record_classifier import Receiver, fnv1a, INPUT_BYTES, valid_command
 
 def fixture(schema=1,recording='full',boxes=()):
@@ -27,6 +33,93 @@ def fixture(schema=1,recording='full',boxes=()):
         lines.append('TRIAL_BLOB_END 1 '+kind)
     lines.append('TRIAL_END '+json.dumps(dict(boot=result['boot'],trial=1,frame=1,transfer_complete=True,transfer_us=123)))
     return ('\n'.join(lines)+'\n').encode(),jpeg,tensor
+
+class SerialException(OSError):
+    pass
+
+def status_line(command,**state):
+    item=dict(boot='0123456789abcdef',command=command,accepted=True,mode='manual',lighting='ambient',recording='full',armed=False,busy=False,
+              in_flight=False,alarm=False,alarm_source='none',trial=0,attempted=0,requested=0,pir=0,warmup_remaining_s=0,pause_remaining_s=0)
+    item.update(state)
+    return ('TRIAL_STATUS '+json.dumps(item)+'\n').encode()
+
+class FakePort:
+    """Stands in for pyserial's port: answers like the trial program and can fail."""
+    def __init__(self,first_state=None,lose_after=None,after_stop=b'',drip=0):
+        self.first_state=first_state or {};self.lose_after=lose_after;self.after_stop=after_stop;self.drip=drip
+        self.written=[];self.outgoing=bytearray();self.reads=0;self.closed=False;self.stops=0;self.lock=threading.Lock()
+    def open(self):pass
+    def write(self,data):
+        command=data.decode('ascii').strip()
+        with self.lock:
+            self.written.append(command)
+            if command=='STATUS' and len(self.written)==1:self.outgoing+=status_line('STATUS',**self.first_state)
+            elif command=='STOP':
+                self.stops+=1;self.outgoing+=status_line('STOP')
+                if self.stops>1:self.outgoing+=self.after_stop
+            else:self.outgoing+=status_line(command)
+    def read(self,size):
+        self.reads+=1
+        if self.lose_after is not None and self.reads>self.lose_after:
+            raise SerialException('device reports readiness to read but returned no data')
+        with self.lock:
+            size=min(size,self.drip) if self.drip else size
+            chunk=bytes(self.outgoing[:size]);del self.outgoing[:size]
+        if not chunk:time.sleep(0.002)
+        return chunk
+    def close(self):self.closed=True
+
+def serial_module(port):
+    module=types.ModuleType('serial')
+    module.SerialException=SerialException
+    def factory(**kwargs):return port
+    module.Serial=factory
+    return module
+
+class LiveRecorderTests(unittest.TestCase):
+    """main() over a stand-in port: start state, a lost port, QUIT and the serial import."""
+    def run_main(self,port,commands,*extra,hold=0.0):
+        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
+        out=Path(temp.name)/'session';queue=list(commands)
+        def console():
+            if queue:
+                time.sleep(0.05);return queue.pop(0)
+            time.sleep(hold)
+            raise EOFError
+        with mock.patch.dict(sys.modules,{'serial':serial_module(port)}),mock.patch('builtins.input',console),mock.patch('builtins.print'):
+            code=record_classifier.main(['--port','fake','--output',str(out),'--quiet-seconds','0.2','--drain-seconds','5',*extra])
+        rows=[json.loads(x) for x in (out/'events.jsonl').read_text().splitlines()]
+        return code,out,rows,json.loads((out/'run_manifest.json').read_text()),json.loads((out/'summary.json').read_text())
+    def test_opening_state_is_recorded_then_normalized(self):
+        port=FakePort(first_state=dict(mode='pir',armed=True))
+        code,out,rows,manifest,summary=self.run_main(port,['CAPTURE 1'])
+        self.assertEqual(code,0);self.assertEqual(port.written,['STATUS','STOP','CAPTURE 1','STOP'])
+        self.assertEqual(manifest['initial_status']['mode'],'pir');self.assertTrue(manifest['initial_status']['armed'])
+        self.assertEqual(manifest['start_status']['command'],'STOP');self.assertEqual(manifest['close'],'normal')
+        self.assertEqual([r['host_command'] for r in rows if 'host_command' in r],['STATUS','STOP','CAPTURE 1','STOP'])
+    def test_keep_state_sends_no_stop_at_start(self):
+        port=FakePort(first_state=dict(mode='pir',armed=True))
+        code,_,_,manifest,_=self.run_main(port,[],'--keep-state')
+        self.assertEqual(port.written,['STATUS','STOP']);self.assertNotIn('start_status',manifest)
+    def test_lost_port_is_an_error_and_no_stop_is_logged(self):
+        port=FakePort(lose_after=40)
+        code,out,rows,manifest,summary=self.run_main(port,[],hold=2.0)
+        self.assertEqual(code,1);self.assertEqual(manifest['close'],'serial_lost')
+        self.assertTrue(any('serial connection lost' in e for e in summary['errors']))
+        sent=[r['host_command'] for r in rows if 'host_command' in r]
+        self.assertEqual(sent,port.written);self.assertEqual(sent,['STATUS','STOP'])
+        self.assertTrue((out/'index.html').exists())
+    def test_quit_waits_for_the_outstanding_frame(self):
+        raw,jpeg,tensor=fixture(schema=2)
+        port=FakePort(after_stop=raw,drip=700)
+        code,out,rows,manifest,summary=self.run_main(port,[])
+        self.assertEqual(code,0);self.assertEqual(summary['complete_valid_pairs'],1)
+        self.assertEqual(next(out.glob('*.i8')).read_bytes(),tensor)
+    def test_missing_pyserial_leaves_no_session_folder(self):
+        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);out=Path(temp.name)/'session'
+        with mock.patch.dict(sys.modules,{'serial':None}),mock.patch('sys.stderr'),self.assertRaises(SystemExit):
+            record_classifier.main(['--port','fake','--output',str(out)])
+        self.assertFalse(out.exists())
 
 class RecordingTests(unittest.TestCase):
     def record(self,raw,chunk=4096):
@@ -145,6 +238,25 @@ class RecordingTests(unittest.TestCase):
         self.assertFalse(r.errors);self.assertEqual(s['cancelled_transfers'],1);self.assertEqual(s['complete_valid_pairs'],0)
         self.assertEqual(next(root.glob('*.jpg')).read_bytes(),jpeg);self.assertFalse(list(root.glob('*.i8')))
         r,_,_=self.record(('\n'.join(lines[:start+3]+['TRIAL_BLOB_CANCELLED 1 input 180'])+'\n').encode());self.assertTrue(r.errors)
+    def test_sdk_log_lines_are_diagnostics_not_errors(self):
+        raw,_,_=fixture(schema=2)
+        r,root,s=self.record(b'E (1234) gdma: transfer stalled\n\x1b[0;33mW (1240) cam_hal: FB-OVF\x1b[0m\n'+raw+b'ERROR camera_init code=0x106 name=ESP_ERR_NOT_SUPPORTED\n')
+        self.assertEqual(s['errors'],['device: ERROR camera_init code=0x106 name=ESP_ERR_NOT_SUPPORTED'])
+        self.assertEqual(s['device_diagnostics'],['E (1234) gdma: transfer stalled','W (1240) cam_hal: FB-OVF'])
+        self.assertEqual(s['complete_valid_pairs'],1)
+    def test_box_outside_the_picture_keeps_picture_and_input(self):
+        raw,jpeg,tensor=fixture(schema=2,boxes=[dict(category=0,score=.3,box=[10,10,320,100])])
+        r,root,s=self.record(raw)
+        self.assertFalse(r.errors);self.assertEqual(len(s['warnings']),1);self.assertEqual(s['complete_valid_pairs'],1)
+        self.assertEqual(next(root.glob('*.jpg')).read_bytes(),jpeg);self.assertEqual(next(root.glob('*.i8')).read_bytes(),tensor)
+    def test_one_error_per_failed_transfer(self):
+        raw,_,_=fixture();bad=raw.replace(b'TRIAL_DATA 1 input 0 ',b'TRIAL_DATA 2 input 0 ',1)
+        r,_,s=self.record(bad);self.assertEqual(s['complete_valid_pairs'],0)
+        self.assertEqual(r.errors,['data chunk identity/offset mismatch','incomplete frame: 0123456789abcdef-trial-000001-frame-000001'])
+        line=next(x for x in raw.splitlines(keepends=True) if x.startswith(b'TRIAL_DATA 1 input 180 '))
+        r,_,s=self.record(raw.replace(line,line+line));self.assertEqual(len(r.errors),2)
+        joined=raw[raw.index(b'TRIAL_DATA 1 input 3600 '):]
+        r,_,s=self.record(joined);self.assertEqual(len(r.errors),2)
     def test_sensor_state_lines_are_not_errors(self):
         line='PIR_STATE '+json.dumps(dict(boot='0123456789abcdef',mode='pir',pir=1,warmed_up=True,paused=False,pause_remaining_s=0,armed=True,at_us=61000000))
         r,root,s=self.record((line+'\n').encode());self.assertFalse(r.errors)

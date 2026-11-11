@@ -22,6 +22,8 @@ from datetime import datetime, timezone
 MAX_LINE = 65536
 MAX_JPEG = 1000000
 INPUT_BYTES = 224 * 224 * 3
+ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+SDK_DIAGNOSTIC = re.compile(r"^([EW])\s+\(\s*\d+\)")
 
 
 def valid_command(command):
@@ -112,17 +114,22 @@ def validate_result(item):
             raise ValueError("invalid input exponent")
     if item["jpeg_bytes"] and any(type(item.get(k)) is not int or not 1 <= item[k] <= 640 for k in ("camera_width", "camera_height")):
         raise ValueError("invalid camera dimensions")
+
+
+def box_problem(item):
+    """A box list the recorder cannot check is reported, never a reason to drop the frame."""
     boxes = item.get("boxes")
     if not isinstance(boxes, list) or len(boxes) > 10:
-        raise ValueError("invalid box list")
+        return "box list is not a list of at most 10 boxes"
     for box in boxes:
-        coords = box.get("box")
+        coords = box.get("box") if isinstance(box, dict) else None
         if (not isinstance(coords, list) or len(coords) != 4 or any(type(x) is not int for x in coords)
-                or not 0 <= coords[0] <= coords[2] < item["camera_width"]
-                or not 0 <= coords[1] <= coords[3] < item["camera_height"]
+                or not 0 <= coords[0] <= coords[2] < item.get("camera_width", 0)
+                or not 0 <= coords[1] <= coords[3] < item.get("camera_height", 0)
                 or type(box.get("category")) is not int or box["category"] != 0
                 or type(box.get("score")) not in (int, float) or not math.isfinite(box["score"]) or not 0 <= box["score"] <= 1):
-            raise ValueError("invalid detection box")
+            return "a detection box is outside the picture or malformed"
+    return None
 
 
 class Receiver:
@@ -136,7 +143,11 @@ class Receiver:
         self.output_tests = {}
         self.injections = {}
         self.pending = None
+        self.skip_blob = None  # (frame, kind) of a failed blob whose remaining chunks are ignored
         self.errors = []
+        self.warnings = []
+        self.diagnostics = []  # ESP-IDF E (...) and W (...) log lines: device logs, not recording errors
+        self.status_replies = []
         self.closed = False
         self.discard_line = False
         self.on_event = on_event
@@ -150,6 +161,14 @@ class Receiver:
     def error(self, message):
         self.errors.append(message)
         self.emit(recorder_error=message)
+
+    def warn(self, message):
+        self.warnings.append(message)
+        self.emit(recorder_warning=message)
+
+    def transfer_open(self):
+        """True while a blob or a frame without its TRIAL_END is outstanding."""
+        return self.pending is not None or any(not row["ended"] for row in self.frames.values())
 
     def feed(self, data):
         if self.closed:
@@ -171,6 +190,9 @@ class Receiver:
                 self.process(raw.decode("utf-8").strip())
             except (ValueError, TypeError, KeyError, AttributeError, OverflowError) as exc:
                 self.error(str(exc))
+                if self.pending is not None:
+                    # One error per failed transfer: its remaining chunks are ignored.
+                    self.skip_blob = (self.pending[0]["frame"], self.pending[0]["kind"])
                 self.pending = None
         if len(self.buffer) > MAX_LINE:
             self.error("oversized unterminated serial line")
@@ -226,8 +248,14 @@ class Receiver:
             return
         if text.startswith("TRIAL_DATA "):
             parts = text.split()
-            if len(parts) != 5 or self.pending is None:
-                raise ValueError("orphan or malformed data chunk")
+            if self.pending is None:
+                key = (int(parts[1]), parts[2]) if len(parts) == 5 and parts[1].isdigit() else None
+                if key is not None and key == self.skip_blob:
+                    return
+                self.skip_blob = key
+                raise ValueError("data chunks without their blob header (recording joined during a transfer?)")
+            if len(parts) != 5:
+                raise ValueError("malformed data chunk")
             header, data = self.pending
             if int(parts[1]) != header["frame"] or parts[2] != header["kind"] or int(parts[3]) != len(data):
                 raise ValueError("data chunk identity/offset mismatch")
@@ -238,6 +266,9 @@ class Receiver:
             return
         if text.startswith("TRIAL_BLOB_END "):
             parts = text.split()
+            if self.pending is None and len(parts) == 3 and parts[1].isdigit() and (int(parts[1]), parts[2]) == self.skip_blob:
+                self.skip_blob = None
+                return
             if len(parts) != 3 or self.pending is None:
                 raise ValueError("orphan blob ending")
             header, data = self.pending
@@ -250,6 +281,9 @@ class Receiver:
             return
         if text.startswith("TRIAL_BLOB_CANCELLED "):
             parts = text.split()
+            if self.pending is None and len(parts) == 4 and parts[1].isdigit() and (int(parts[1]), parts[2]) == self.skip_blob:
+                self.skip_blob = None
+                return
             if len(parts) != 4 or self.pending is None:
                 raise ValueError("orphan transfer cancellation")
             header, data = self.pending
@@ -260,6 +294,7 @@ class Receiver:
             self.emit(transfer_cancelled=dict(frame=header["frame"], kind=header["kind"], bytes_received=len(data)))
             return
         if text.startswith("TRIAL_BLOB "):
+            self.skip_blob = None
             if self.pending is not None:
                 self.error("previous blob interrupted")
             self.pending = None
@@ -280,6 +315,7 @@ class Receiver:
             self.pending = header, bytearray()
             return
         if text.startswith("TRIAL_FRAME "):
+            self.skip_blob = None
             if self.pending is not None:
                 self.error("new result interrupted blob")
                 self.pending = None
@@ -290,10 +326,15 @@ class Receiver:
                 raise ValueError("duplicate result identity")
             stem = f"{key[0]}-trial-{item['trial']:06d}-frame-{key[1]:06d}"
             self.frames[key] = {"stem": stem, "result": item, "artifacts": {}, "ended": False, "complete": False}
+            problem = box_problem(item)
+            if problem:
+                self.frames[key]["warning"] = problem
+                self.warn(f"{stem}: {problem}; its picture and model input are kept")
             (self.root / (stem + ".json")).write_text(json.dumps(item, indent=2, allow_nan=False) + "\n")
             self.emit(result=item)
             return
         if text.startswith("TRIAL_END "):
+            self.skip_blob = None
             ending = load_json(text[len("TRIAL_END "):])
             key = identity(ending)
             if self.pending is not None:
@@ -313,10 +354,20 @@ class Receiver:
             row["ending"] = ending
             self.emit(frame_end=ending, received_complete=row["complete"])
             return
+        text = ANSI.sub("", text)
         if text.startswith("BOOT ") and self.pending is not None:
             self.error("device reboot interrupted blob")
             self.pending = None
-        if text.startswith(("ERROR", "TRIAL_ERROR", "E (")) or "Guru Meditation" in text:
+        if text.startswith("TRIAL_STATUS "):
+            try:
+                self.status_replies.append(load_json(text[len("TRIAL_STATUS "):]))
+            except ValueError:
+                pass
+        if SDK_DIAGNOSTIC.match(text):
+            self.diagnostics.append(text)
+            self.emit(device_message=text, diagnostic=text[0])
+            return
+        if text.startswith(("ERROR", "TRIAL_ERROR")) or "Guru Meditation" in text:
             self.error("device: " + text)
         self.emit(device_message=text)
 
@@ -377,6 +428,8 @@ class Receiver:
             "injections_cancelled": sum(bool(row["end"] and row["end"]["event"] == "cancelled") for row in self.injections.values()),
             "injections_incomplete": sum(row["end"] is None for row in self.injections.values()),
             "errors": self.errors,
+            "warnings": self.warnings,
+            "device_diagnostics": self.diagnostics,
             "scope": "Image/input transfer and reported inference/commands; not physical-output verification or recognition accuracy."
         }
         (self.root / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
@@ -419,9 +472,21 @@ def main(argv=None):
     source.add_argument("--replay", type=Path, help="Reconstruct a recording from an existing serial.raw")
     parser.add_argument("--output", type=Path, required=True, help="New session directory; must not already exist")
     parser.add_argument("--baud", type=int, default=115200)
+    parser.add_argument("--keep-state", action="store_true",
+                        help="record the device's state at the start without sending STOP")
+    parser.add_argument("--drain-seconds", type=float, default=30.0,
+                        help="longest wait after QUIT for an outstanding frame transfer to end")
+    parser.add_argument("--quiet-seconds", type=float, default=2.0,
+                        help="quiet time after QUIT, with no transfer outstanding, before closing")
     args = parser.parse_args(argv)
     if args.output.exists():
         parser.error("output directory already exists; choose a new trial directory")
+    serial = None
+    if not args.replay:
+        try:
+            import serial
+        except ImportError:
+            parser.error("pyserial is required for a live recording: python -m pip install -r tools/requirements-classifier.txt")
     args.output.mkdir(parents=True)
     def report(row):
         if "result" in row:
@@ -435,20 +500,41 @@ def main(argv=None):
             print("Injected detection:", row["injection"])
         elif "recorder_error" in row:
             print("RECORDING ERROR:",row["recorder_error"])
+        elif "recorder_warning" in row:
+            print("Recording warning:",row["recorder_warning"])
     receiver = Receiver(args.output, on_event=None if args.replay else report)
     manifest = {"schema": 1, "started_utc": utc(), "source": str(args.replay) if args.replay else args.port,
-                "recorder_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
-    (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+                "recorder_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "state": "open"}
+    manifest_path = args.output / "run_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+    close = "normal"
     try:
         if args.replay:
             with args.replay.open("rb") as stream:
                 while chunk := stream.read(4096):
                     receiver.feed(chunk)
         else:
-            import serial
             device = serial.Serial(port=None, baudrate=args.baud, timeout=0.1)
             device.dtr = False; device.rts = False; device.port = args.port
             device.open()
+            def send(command):
+                # The event row follows a completed write, so no command is logged unsent.
+                device.write((command + "\n").encode("ascii"))
+                receiver.emit(host_command=command)
+            def read_once():
+                chunk = device.read(4096)
+                if chunk:
+                    receiver.feed(chunk)
+                return chunk
+            def wait_for_reply(command, seconds):
+                seen = len(receiver.status_replies)
+                deadline = time.monotonic() + seconds
+                while time.monotonic() < deadline:
+                    read_once()
+                    for reply in receiver.status_replies[seen:]:
+                        if reply.get("command") == command:
+                            return reply
+                return None
             pending = queue.Queue()
             def console():
                 try:
@@ -456,15 +542,20 @@ def main(argv=None):
                         pending.put(input())
                 except EOFError:
                     pending.put("QUIT")
-            threading.Thread(target=console, daemon=True).start()
             print("Commands: CAPTURE 1..600, MODE MANUAL, MODE PIR, LIGHT AMBIENT, LIGHT WHITE, RECORD FULL, RECORD JPEG, TEST OUTPUT, INJECT DEER, ARM, DISARM, STOP, STATUS")
-            print("MARK description writes a local marker; QUIT sends STOP and closes recording. Boot is manual/disarmed.")
-            device.write(b"STATUS\n")
+            print("MARK description writes a local marker; QUIT sends STOP and closes recording.")
             try:
+                # Opening the port can reset the board; the reply then follows READY.
+                send("STATUS")
+                manifest["initial_status"] = wait_for_reply("STATUS", 30)
+                if manifest["initial_status"] is None:
+                    receiver.error("no reply to the opening STATUS within 30 s")
+                elif not args.keep_state:
+                    send("STOP")
+                    manifest["start_status"] = wait_for_reply("STOP", 10)
+                threading.Thread(target=console, daemon=True).start()
                 while True:
-                    chunk = device.read(4096)
-                    if chunk:
-                        receiver.feed(chunk)
+                    read_once()
                     try:
                         command = pending.get_nowait().strip()
                     except queue.Empty:
@@ -475,22 +566,35 @@ def main(argv=None):
                         receiver.emit(marker=command[5:]);continue
                     if not valid_command(command):
                         print("Invalid command; nothing sent.");continue
-                    receiver.emit(host_command=command)
-                    device.write((command + "\n").encode("ascii"))
+                    send(command)
                     print("Sent:", command)
             except KeyboardInterrupt:
-                pass
-            finally:
-                receiver.emit(host_command="STOP")
-                device.write(b"STOP\n")
-                deadline = time.monotonic() + 3
-                while time.monotonic() < deadline:
-                    chunk = device.read(4096)
-                    if chunk:
-                        receiver.feed(chunk)
+                close = "interrupted"
+            except (serial.SerialException, OSError) as exc:
+                close = "serial_lost"
+                receiver.error(f"serial connection lost: {exc}")
+            if close != "serial_lost":
+                try:
+                    send("STOP")
+                    # Wait for an outstanding frame to finish, then for the quiet time.
+                    deadline = time.monotonic() + args.drain_seconds
+                    quiet_since = time.monotonic()
+                    while time.monotonic() < deadline:
+                        if read_once():
+                            quiet_since = time.monotonic()
+                        elif not receiver.transfer_open() and time.monotonic() - quiet_since >= args.quiet_seconds:
+                            break
+                except (serial.SerialException, OSError) as exc:
+                    close = "serial_lost"
+                    receiver.error(f"serial connection lost while stopping: {exc}")
+            try:
                 device.close()
+            except (serial.SerialException, OSError):
+                pass
     finally:
         receiver.finish()
+        manifest.update(state="closed", close=close, ended_utc=utc())
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     print(args.output / "index.html")
     return 1 if receiver.errors else 0
 
