@@ -1,0 +1,58 @@
+[
+  {
+    "name": "nrel_greenwich_north_winter",
+    "nominal_day_utc": "1994-01-02",
+    "nominal_midnight_utc": 757468800,
+    "latitude": 35,
+    "longitude": 0,
+    "sunrise_utc": "1994-01-02T07:08:12.8+00:00",
+    "sunset_utc": "1994-01-02T16:59:55.9+00:00",
+    "expected_sunrise_unix": 757494492.8,
+    "expected_sunset_unix": 757529995.9,
+    "tolerance_seconds": 60,
+    "source": "https://www.nlr.gov/docs/fy08osti/34302.pdf",
+    "source_location": "Table A2.1, SPA columns"
+  },
+  {
+    "name": "nrel_greenwich_south_winter",
+    "nominal_day_utc": "1996-07-05",
+    "nominal_midnight_utc": 836524800,
+    "latitude": -35,
+    "longitude": 0,
+    "sunrise_utc": "1996-07-05T07:08:15.4+00:00",
+    "sunset_utc": "1996-07-05T17:01:04.5+00:00",
+    "expected_sunrise_unix": 836550495.4,
+    "expected_sunset_unix": 836586064.5,
+    "tolerance_seconds": 60,
+    "source": "https://www.nlr.gov/docs/fy08osti/34302.pdf",
+    "source_location": "Table A2.1, SPA columns"
+  },
+  {
+    "name": "nrel_greenwich_south_summer",
+    "nominal_day_utc": "2004-12-04",
+    "nominal_midnight_utc": 1102118400,
+    "latitude": -35,
+    "longitude": 0,
+    "sunrise_utc": "2004-12-04T04:38:57.1+00:00",
+    "sunset_utc": "2004-12-04T19:02:02.5+00:00",
+    "expected_sunrise_unix": 1102135137.1,
+    "expected_sunset_unix": 1102186922.5,
+    "tolerance_seconds": 60,
+    "source": "https://www.nlr.gov/docs/fy08osti/34302.pdf",
+    "source_location": "Table A2.1, SPA columns"
+  },
+  {
+    "name": "nrel_golden_utc_date_events",
+    "nominal_day_utc": "2003-10-17",
+    "nominal_midnight_utc": 1066348800,
+    "latitude": 39.742476,
+    "longitude": -105.1786,
+    "sunrise_utc": "2003-10-17T13:12:43+00:00",
+    "sunset_utc": "2003-10-17T00:20:19+00:00",
+    "expected_sunrise_unix": 1066396363.0,
+    "expected_sunset_unix": 1066350019.0,
+    "tolerance_seconds": 60,
+    "source": "https://midcdmz.nlr.gov/spa/spa_tester.c",
+    "source_location": "Published expected clock times: sunrise is Oct17 local, sunset refers to preceding local calendar day when UTC-day events are normalized; independently checked by USNO-coordinate bisection."
+  }
+]

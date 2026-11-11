@@ -1,0 +1,25 @@
+Night-controlled detector: build and test status
+
+Written and tested on a computer; never flashed to or run on the unit.
+
+Target: ESP32-S3, ESP-IDF 5.4.2, Xtensa GCC 14.2.0 (esp-14.2.0_20241119).
+Normal application (DEER_CAMERA_DIAGNOSTIC=OFF): 1,034,720 bytes.
+Bounded camera-diagnostic application (DEER_CAMERA_DIAGNOSTIC=ON): 1,034,080 bytes.
+Factory partition: 4,128,768 bytes; both fit.
+Detector rule: firmware/motion-size/src/approach_gate.hpp, included unchanged.
+Alarm waveform: shared/alarm_pattern.hpp.
+
+Host checks (strict warnings, UndefinedBehaviorSanitizer):
+- Production policy/output/configuration: 1,214 assertions passed.
+- Independent core/policy review: 10,437 assertions passed.
+- Independent solar review: 1,176 crossings, 3,522 classifications,
+  largest difference 7.134 seconds.
+- Capture-generation handoff: 42 checks passed.
+- Extracted service transactions: 46 checks passed.
+- Embedded control page: 79 assertions passed (Node).
+No address/leak-sanitizer pass is claimed.
+
+The commands are in README.md. Builds and host tests establish the software
+and its policy behaviour in the tested cases. Network provisioning, physical
+pause and cancellation, restart, radio and clock loss, GPIO timing and power
+use need checks on the board.

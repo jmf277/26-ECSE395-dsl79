@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.16)
+list(APPEND EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/src")
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(deer_motion_control)
+if(NOT IDF_TARGET STREQUAL "esp32s3")
+    message(FATAL_ERROR "This model and firmware require ESP32-S3. Run idf.py set-target esp32s3.")
+endif()
