@@ -16,12 +16,12 @@ python tools/record_classifier.py --replay tests/recognition/p3-demo-20261104-02
 - **Settings, the same in every session.** Threshold 0.85, with two qualifying frames among the last three valid frames to confirm; 320×240 JPEG at quality 12, letterboxed to the 224×224 model input with padding 114; box floor 0.10, overlap 0.70, at most 10 boxes; 500 ms pause after each recorded frame; CPU 160 MHz. Neither mirror nor flip was set, so every picture is a mirror image of the scene. From session 06 on the camera board was upside down, so the room appears upside down, and the prints were placed to read upright to the camera.
 - Opening the recorder reset the board, so every session begins with the board's boot lines and the 60-second sensor warm-up started again.
 
-To put these images back on a board, from `tests/recognition/firmware`, first keep a copy of what the board holds, then write and check:
+To put these images back on a board, from `tests/recognition/firmware`, check the images against their checksums, keep a copy of what the board holds (use the board's actual port), then write them; the flashing tool verifies each write:
 
 ```sh
+shasum -a 256 -c SHA256SUMS
 python -m esptool --chip esp32s3 --port COM5 read_flash 0 0x400000 board-before-flash.bin
 python -m esptool --chip esp32s3 --port COM5 --before default_reset --after hard_reset write_flash --flash_mode dio --flash_size 4MB --flash_freq 80m 0x0 bootloader.bin 0x8000 partition-table.bin 0x10000 classifier.bin
-shasum -a 256 -c SHA256SUMS
 ```
 
 ## What the trials set out to do
