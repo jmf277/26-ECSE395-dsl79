@@ -15,10 +15,21 @@ import math
 from pathlib import Path
 import re
 import time
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 MAX_JPEG = 1000000
+PROTOCOL = 3
+GATE_SOURCE = Path(__file__).resolve().parents[1] / "experiments" / "deer-classifier" / "temporal_gate.py"
+
+
+def load_gate_class(path=GATE_SOURCE):
+    """The team's Python two-of-three gate, loaded from the repository so both paths use one rule."""
+    spec = importlib.util.spec_from_file_location("deer_temporal_gate", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.TemporalDeerGate
 
 def fnv1a(data):
     value = 2166136261
@@ -69,8 +80,8 @@ class Device:
 
     def status(self):
         result = self.request("/status")
-        if result.get("protocol") != 2:
-            raise ValueError("device does not implement image-bound alarm protocol 2")
+        if result.get("protocol") != PROTOCOL:
+            raise ValueError(f"device does not implement image-bound alarm protocol {PROTOCOL}")
         return result
 
 class NmsWarnings(logging.Handler):
@@ -132,7 +143,7 @@ class EspDetPredictor:
         return dict(score=max((b["score"] for b in result), default=0.0), boxes=result)
 
 def validate_manifest(manifest):
-    if manifest.get("protocol") != 2 or not isinstance(manifest.get("boot"), str) or not re.fullmatch(r"[0-9a-f]{16}", manifest["boot"]):
+    if manifest.get("protocol") != PROTOCOL or not isinstance(manifest.get("boot"), str) or not re.fullmatch(r"[0-9a-f]{16}", manifest["boot"]):
         raise ValueError("invalid manifest protocol/boot")
     if type(manifest.get("burst")) is not int or not 0 <= manifest["burst"] <= 0xffffffff:
         raise ValueError("invalid burst")
@@ -151,21 +162,40 @@ def validate_manifest(manifest):
     if images and manifest["burst"] == 0:
         raise ValueError("retained images require a burst identity")
 
-def process_manifest(device, predictor, manifest, root, seen, threshold):
-    """One synchronous inference per original JPEG; an invalid sample sends nothing."""
+class BurstGates:
+    """One two-of-three gate per burst, mirroring the board's, so each record carries the decision."""
+    def __init__(self, threshold, gate_class=None):
+        self.threshold = threshold
+        self.gate_class = gate_class or load_gate_class()
+        self.gates = {}
+
+    def for_burst(self, boot, burst):
+        return self.gates.setdefault((boot, burst), self.gate_class(window=3, required=2, threshold=self.threshold))
+
+
+def process_manifest(device, predictor, manifest, root, seen, threshold, gates=None):
+    """One synchronous inference per original JPEG, in capture order.
+
+    A photo that fails (download, check, inference or reply) is recorded with its
+    error and passed over; it sends no verdict and clears the two-of-three
+    history, as the board does for a photo left without a verdict.
+    """
     from PIL import Image
     validate_manifest(manifest)
     if not manifest["accepting_results"]:
         return []
+    gates = gates or BurstGates(threshold)
+    gate = gates.for_burst(manifest["boot"], manifest["burst"])
     results = []
     for item in manifest["images"]:
         key = (manifest["boot"], manifest["burst"], item["id"])
         if key in seen:
             continue
+        seen.add(key)
         stem = f"{key[0]}-burst-{key[1]:06d}-photo-{key[2]:06d}"
         photo_path, result_path = root/(stem+".jpg"), root/(stem+".json")
         fields = dict(boot=key[0], burst=key[1], id=key[2])
-        record = dict(schema=1, **fields, threshold=threshold, model=predictor.identity,
+        record = dict(schema=2, **fields, threshold=threshold, rule="two of the last three photos", model=predictor.identity,
                       source="ESP32 camera JPEG; laptop float inference", alarm_receipt=None)
         try:
             # Construct the URL from validated identity, never a server-supplied destination.
@@ -188,14 +218,16 @@ def process_manifest(device, predictor, manifest, root, seen, threshold):
             verdict = dict(**fields, fnv1a=item["fnv1a"], deer="true" if record["deer"] else "false")
             receipt = device.request("/classification", verdict)
             if (receipt.get("accepted") is not True or type(receipt.get("duplicate")) is not bool
-                    or type(receipt.get("alarm_started")) is not bool
-                    or (receipt["alarm_started"] and (not record["deer"] or receipt["duplicate"]))):
+                    or type(receipt.get("present")) is not bool or type(receipt.get("alarm_started")) is not bool
+                    or (receipt["alarm_started"] and (not record["deer"] or receipt["duplicate"] or not receipt["present"]))):
                 raise ValueError("invalid classification acknowledgment")
             record["alarm_receipt"] = receipt
-            seen.add(key)
-        except Exception as exc:
+            record["confirmed"] = gate.update(score)
+            if record["confirmed"] != receipt["present"]:
+                record["error"] = "device and laptop disagree on the two-of-three decision"
+        except (OSError, ValueError, RuntimeError) as exc:
+            gate.update(None)
             record["error"] = f"{type(exc).__name__}: {exc}"
-            raise
         finally:
             with result_path.open("x", encoding="utf-8") as stream:
                 json.dump(record,stream,indent=2,allow_nan=False)
@@ -203,7 +235,7 @@ def process_manifest(device, predictor, manifest, root, seen, threshold):
         results.append(record)
     return results
 
-def main(argv=None):
+def main(argv=None, predictor_factory=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--model-project", type=Path, required=True, help="deer_classifier directory containing espdet_compat.py")
@@ -214,40 +246,62 @@ def main(argv=None):
     parser.add_argument("--size", type=int, default=224)
     parser.add_argument("--threshold", type=float, default=.85)
     parser.add_argument("--seconds", type=float, default=180)
+    parser.add_argument("--poll", type=float, default=.25, help="seconds between status polls")
     parser.add_argument("--arm", action="store_true", help="permit model-driven physical outputs")
-    parser.add_argument("--capture", action="store_true", help="start one manual burst once PIR warm-up finishes")
+    parser.add_argument("--capture", action="store_true", help="start one manual burst once PIR warm-up and any pause have finished")
     args = parser.parse_args(argv)
     if (not math.isfinite(args.threshold) or not .001 < args.threshold <= 1 or args.size <= 0 or args.size % 32
-            or not math.isfinite(args.seconds) or args.seconds <= 0):
-        parser.error("threshold must be in (.001,1], size a positive multiple of 32, seconds positive")
+            or not math.isfinite(args.seconds) or args.seconds <= 0 or not math.isfinite(args.poll) or args.poll <= 0):
+        parser.error("threshold must be in (.001,1], size a positive multiple of 32, seconds and poll positive")
     if args.output.exists():
         parser.error("output directory exists; choose a new session directory")
-    predictor = EspDetPredictor(args.checkpoint,args.model_project,args.esp_detection,args.device,args.size)
+    predictor = (predictor_factory or EspDetPredictor)(args.checkpoint,args.model_project,args.esp_detection,args.device,args.size)
     device = Device(args.url)
     initial = device.status()
     args.output.mkdir(parents=True)
-    (args.output/"run.json").write_text(json.dumps(dict(model=predictor.identity, threshold=args.threshold, armed=args.arm,
-        client_sha256=digest(__file__), initial_status=initial, result_scope="laptop inference and device acknowledgments; physical actuation requires observation"),indent=2)+"\n")
-    seen, capture_pending = set(), args.capture
+    (args.output/"run.json").write_text(json.dumps(dict(model=predictor.identity, threshold=args.threshold, rule="two of the last three photos",
+        armed=args.arm, client_sha256=digest(__file__), gate_sha256=digest(GATE_SOURCE), initial_status=initial,
+        result_scope="laptop inference and device acknowledgments; physical actuation requires observation"),indent=2)+"\n")
+    seen, capture_pending, gates = set(), args.capture, BurstGates(args.threshold)
     events = (args.output/"events.jsonl").open("x",encoding="utf-8")
     def event(**row):
         events.write(json.dumps(dict(host_monotonic=time.monotonic(),**row),allow_nan=False)+"\n");events.flush()
+    failures = 0
     try:
         event(stop=device.request("/stop",{}))
         if args.arm:
             event(arm=device.request("/arm",{}))
         deadline = time.monotonic()+args.seconds
         while time.monotonic()<deadline:
-            state = device.status();event(status=state)
-            if state["boot"] != initial["boot"]:
-                raise RuntimeError("device rebooted; restart the supervised trial")
-            if capture_pending and state.get("pir_ready") and not state.get("burst_active") and not state.get("alarm_active"):
-                # /capture is a text acknowledgment, unlike the JSON control routes.
-                device.request("/capture",{},image=True);capture_pending=False
-            for row in process_manifest(device,predictor,device.request("/burst"),args.output,seen,args.threshold):
-                event(photo=row["id"],score=row["prediction"]["score"],receipt=row["alarm_receipt"])
-                print(f"Photo {row['id']}: score={row['prediction']['score']:.4f}, deer={row['deer']}, receipt={row['alarm_receipt']}")
-            time.sleep(.25)
+            try:
+                state = device.status();event(status=state)
+                if state["boot"] != initial["boot"]:
+                    raise RuntimeError("device rebooted; restart the supervised trial")
+                if (capture_pending and state.get("pir_ready") and not state.get("burst_active")
+                        and not state.get("alarm_active") and not state.get("cooldown_seconds")):
+                    try:
+                        # /capture is a text acknowledgment, unlike the JSON control routes.
+                        device.request("/capture",{},image=True);capture_pending=False;event(capture="requested")
+                    except HTTPError as exc:
+                        if exc.code != 409:
+                            raise
+                        event(capture_deferred=f"{exc.code}: device busy, cooling down or warming up")
+                for row in process_manifest(device,predictor,device.request("/burst"),args.output,seen,args.threshold,gates):
+                    details = dict(photo=row["id"],score=row.get("prediction",{}).get("score"),confirmed=row.get("confirmed"),
+                                   receipt=row["alarm_receipt"])
+                    if row.get("error"):
+                        details["photo_error"] = row["error"]
+                    event(**details)
+                    score = row.get("prediction",{}).get("score")
+                    print(f"Photo {row['id']}: score={score}, deer={row.get('deer')}, confirmed={row.get('confirmed')}, "
+                          f"receipt={row['alarm_receipt']}" + (f", error={row['error']}" if row.get("error") else ""))
+                failures = 0
+            except (URLError, TimeoutError, ConnectionError) as exc:
+                failures += 1
+                event(poll_error=f"{type(exc).__name__}: {exc}")
+                if failures * args.poll >= 10:
+                    raise RuntimeError("device unreachable for 10 s") from exc
+            time.sleep(args.poll)
     except KeyboardInterrupt:
         event(interrupted=True)
     except Exception as exc:

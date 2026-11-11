@@ -236,7 +236,7 @@ void setup() {
 <button onclick="snap()">Start 10-photo burst</button> <a href="/latest.jpg?download=1">Download latest photo</a>
 <button onclick="control('arm')">Arm response</button><button onclick="control('stop')">Stop and disarm</button>
 <p><img id="photo" style="max-width:100%" alt="Waiting for first photo"></p>
-<p>The computer classifies retained JPEGs and returns a verdict tied to the image. One positive verdict stops acquisition and, when armed, starts three tone pulses and white flashes. Boot is disarmed. Capture uses ambient light. No new burst begins during the response.</p><p><a href="/burst">Burst photo manifest</a></p>
+<p>The computer classifies retained JPEGs and returns a verdict tied to each image. Two deer verdicts among the last three photos confirm, stop acquisition and, when armed, start three tone pulses and white flashes. Boot is disarmed. Capture uses ambient light. No new burst begins during the response.</p><p><a href="/burst">Burst photo manifest</a></p>
 <script>let seen=0,busy=false;async function poll(){if(busy)return;try{let s=await(await fetch('/status',{cache:'no-store'})).json();document.getElementById('status').textContent=s.state+' | Armed '+s.armed+' | Alarm '+s.alarm_active+' | PIR '+(s.pir?'HIGH':'LOW')+' | Photos '+s.photos;if(s.photos&&s.photos!==seen){seen=s.photos;document.getElementById('photo').src='/latest.jpg?t='+Date.now()}}catch(e){document.getElementById('status').textContent='Reconnecting...'}}async function control(action){busy=true;try{let r=await fetch('/'+action,{method:'POST'});if(!r.ok)alert(await r.text())}catch(e){alert('Request failed')}finally{busy=false;poll()}}async function snap(){await control('capture')}setInterval(poll,1500);poll();</script></body></html>)HTML");
   });
   server.on("/status", HTTP_GET, []() {
@@ -245,13 +245,13 @@ void setup() {
     text.replace("\\", "\\\\"); text.replace("\"", "\\\""); text.replace("\n", "\\n");
     bool armed,alarm;{Lock lock(replyMutex);armed=replyGate.armed;alarm=replyGate.active();}
     server.sendHeader("Cache-Control", "no-store");
-    server.send(200, "application/json", "{\"protocol\":2,\"state\":\"" + text + "\",\"pir_ready\":"+String(pirReady?"true":"false")+",\"pir\":" +
+    server.send(200, "application/json", "{\"protocol\":3,\"state\":\"" + text + "\",\"pir_ready\":"+String(pirReady?"true":"false")+",\"pir\":" +
                 String(digitalRead(PIR_PIN) == HIGH ? "true" : "false") +
                 ",\"photos\":" + String(captureCount) +
                 ",\"boot\":\"" + bootId + "\",\"burst\":" + String(burstId) +
                 ",\"burst_active\":" + String(burstActive ? "true" : "false") +
                 ",\"attempts\":" + String(attemptCount) +
-                ",\"deer\":" + String(deerDetected ? "true" : "false") +
+                ",\"confirmed\":" + String(deerDetected ? "true" : "false") +
                 ",\"armed\":"+String(armed?"true":"false")+",\"alarm_active\":"+String(alarm?"true":"false")+
                 ",\"cooldown_seconds\":" + String(coolingDown ? (COOLDOWN_MS - min(COOLDOWN_MS, millis() - cooldownStart) + 999) / 1000 : 0) + "}");
   });
@@ -282,7 +282,7 @@ void setup() {
   server.on("/photo.jpg", HTTP_GET, sendLatest);
   server.on("/burst", HTTP_GET, []() {
     bool accepting;{Lock lock(replyMutex);accepting=replyGate.open;}
-    String body = "{\"protocol\":2,\"boot\":\"" + bootId + "\",\"burst\":" + String(burstId) + ",\"accepting_results\":"+String(accepting?"true":"false")+",\"images\":[";
+    String body = "{\"protocol\":3,\"boot\":\"" + bootId + "\",\"burst\":" + String(burstId) + ",\"accepting_results\":"+String(accepting?"true":"false")+",\"images\":[";
     for (unsigned i = 0; i < savedCount; ++i) {
       if (i) body += ',';
       char hash[9];snprintf(hash,sizeof(hash),"%08lx",(unsigned long)burstPhotos[i].hash);
@@ -312,15 +312,16 @@ void setup() {
     {Lock lock(replyMutex);decision=replyGate.submit(burstId,imageId,verdict=="true",millis());applyOutputs(replyGate.tick(millis()));}
     using R=laptop_trial::Reply;
     if(decision.reply!=R::Accepted&&decision.reply!=R::Duplicate){server.send(409,"text/plain","Expired, conflicting or cancelled verdict.");return;}
-    if (verdict == "true" && decision.reply==R::Accepted && !deerDetected) {
+    // Two deer verdicts among the last three photos confirm, as on the board path.
+    if (decision.present && decision.reply==R::Accepted && !deerDetected) {
       deerDetected = true;
       burstActive = false;
       coolingDown = false;
       previousPir = true; // Require a LOW before another automatic rising edge.
       standbyCamera();
-      showStatus(decision.startAlarm?"DEER verdict: light/buzzer response started.":"DEER verdict recorded; response disarmed.");
+      showStatus(decision.startAlarm?"DEER confirmed: light/buzzer response started.":"DEER confirmed; response disarmed.");
     }
-    server.send(200,"application/json",String("{\"accepted\":true,\"duplicate\":")+(decision.reply==R::Duplicate?"true":"false")+",\"alarm_started\":"+(decision.startAlarm?"true":"false")+"}");
+    server.send(200,"application/json",String("{\"accepted\":true,\"duplicate\":")+(decision.reply==R::Duplicate?"true":"false")+",\"present\":"+(decision.present?"true":"false")+",\"alarm_started\":"+(decision.startAlarm?"true":"false")+"}");
   });
   server.begin();
   warmupStart = millis();
