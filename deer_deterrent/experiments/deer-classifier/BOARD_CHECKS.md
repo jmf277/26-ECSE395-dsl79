@@ -15,20 +15,18 @@ Run these checks with the recorded-trial application and `tools/record_classifie
 3. Send `CAPTURE 1`. Inspect the retained original JPEG with its drawn boxes, the exact `.input.i8` file and the dequantized preview. Match the result's boot/trial/frame identity, camera dimensions, preprocessing settings, score, boxes and timing. Check for transfer errors before interpreting the image or score.
 4. Repeat independent one-frame captures. They should not accumulate a two-frame confirmation across trial boundaries.
 
-## Capture illumination and independent outputs
+## Capture illumination
 
 1. Keep the alarm disarmed and the camera/target fixed. Run a trial with `LIGHT AMBIENT`, then one with `LIGHT WHITE`. Confirm the selection in status and each frame result. Inspect the retained JPEGs and exact-input previews for lighting, glare, exposure and target visibility.
 2. Observe white illumination before and during capture, followed by darkness during inference/transfer. It must not beep during a disarmed image trial. Attempt a lighting change while a trial is active; it should be rejected so that the trial retains one lighting condition.
 3. Send `STOP` during illuminated acquisition and verify that the light goes out and the cancelled result cannot start an alarm. During a model-input transfer, `STOP` ends the transfer within one group of chunks (`TRIAL_BLOB_CANCELLED`); the frame's picture is kept and the summary counts a cancelled transfer.
 4. Disconnect USB during another illuminated trial and check that the light goes out. The recorder records the lost port as an error and closes the session with its summary and gallery. Reconnect and open a new session: its manifest keeps the board's state as first reported, before the recorder's `STOP`.
-5. Use `STOP`, then `TEST OUTPUT`. Observe three 1.5-second tone pulses, 0.5-second gaps and 5 Hz white flashing over 5.5 seconds. Pair observations with the separately recorded `OUTPUT_TEST` start/terminal events; no image or recognition verdict should be created.
-6. During that output test, another `TEST OUTPUT` or `CAPTURE` must not restart or overlap it. Check immediate cancellation using `STOP` or `DISARM` and on USB disconnection. Check that the test command is rejected when the classifier is armed or in PIR mode. Restore the intended mode/lighting explicitly before recognition checks.
 
 The five-second capture-light watchdog is covered by software simulation. If a real acquisition stall occurs, check physical light cessation and the invalid result rather than counting that attempt as an illuminated recognition sample.
 
 ## Injected detection
 
-`INJECT DEER` puts a confirmed deer detection into the controller at the decision point, where a two-of-three confirmation would arrive. It needs `ARM` in manual mode with no trial running, as a real decision does, and starts the response through the same branch: the shared 5.5-second sequence with no picture taken. Send `ARM`, then `INJECT DEER`. Observe the light and buzzer and pair the observation with the recorded `INJECTION` start and terminal events and the status line's `alarm_source` `injected_detection`. A second `INJECT DEER`, a `CAPTURE` or a `TEST OUTPUT` during the response must be refused; `STOP` or `DISARM` must end it at once (`cancelled`). The steps before the decision, qualifying scores through the two-of-three rule, are checked on a computer by `tests/test_decision_to_alarm.cpp`.
+`TEST OUTPUT` injects the alarm trigger a confirmed deer result sends: the controller starts the response through the same alarm start a confirmed frame takes, the shared 5.5-second sequence, with no picture taken and no score. It is accepted in manual mode, disarmed and idle, once the last run's end has been reported, and refused while armed or in PIR mode. Use `STOP`, then `TEST OUTPUT`. Observe three 1.5-second tone pulses, 0.5-second gaps and 5 Hz white flashing over 5.5 seconds, and pair the observation with the separately recorded `OUTPUT_TEST` start and terminal events and the status line's `alarm_source` `output_test`; no image or recognition verdict is created. Another `TEST OUTPUT` or a `CAPTURE` during the response must be refused, and `STOP`, `DISARM` or disconnecting USB must end it at once (`cancelled`). Restore the intended mode and lighting explicitly before recognition checks. The steps before the decision, qualifying scores through the two-of-three rule, are checked on a computer by `tests/test_decision_to_alarm.cpp`.
 
 ## Recognition and clearing
 
@@ -45,4 +43,4 @@ Use one sufficiently long bounded trial to examine empty scene → deer presenta
 - Disconnect USB during an armed trial and confirm cancellation/disarming. Reconnect, open a new session and explicitly select and arm the next test. This is a supervised USB-recorded workflow, not unattended battery operation.
 - Inspect measured capture, preprocessing, model and transfer times separately. Tensor/JPEG transfer can lengthen spacing between frames; a slower recording cadence is not model-compute time.
 
-In the recorded trials of 4 November no frame reached 0.85, so no recognition decision started the response. If that remains true, report the failed recognition and the absence of a recognition-driven response. `TEST OUTPUT` checks the outputs alone and is not a recognition result; `INJECT DEER` checks the path from a confirmed decision to the response.
+In the recorded trials of 4 November no frame reached 0.85, so no recognition decision started the response. If that remains true, report the failed recognition and the absence of a recognition-driven response. `TEST OUTPUT` checks the path from a confirmed decision to the response by injecting the trigger that decision sends.
