@@ -1,7 +1,7 @@
 // Score-level test of the trial program's decision-to-alarm path, run on a
 // computer against the controller the firmware compiles (src/trial_control.hpp).
-// Scores are injected where the model's frame score goes, and detections are
-// injected at the decision point with INJECT DEER's controller entry.
+// Scores are injected where the model's frame score goes, and the alarm trigger a
+// confirmed result sends is injected with TEST OUTPUT's controller entry.
 //
 // The settings and the expected result of every case are fixed in this file
 // before it runs. Each case runs kRuns times with a different start time and
@@ -25,14 +25,14 @@ constexpr float kInvalid = -1.0f;            // marks a frame whose capture or i
 // What one run observed.
 struct Observed {
     bool alarm = false;              // an alarm ran
-    int alarmFrame = 0;              // frame whose decision started it (0: none or injected)
+    int alarmFrame = 0;              // frame whose decision started it (0: none, or TEST OUTPUT)
     AlarmSource source = AlarmSource::None;
     int framesRun = 0;               // frames taken before the trial ended
     int whiteEdges = 0, toneEdges = 0;  // rising edges while the alarm ran, sampled every tick
     int64_t durationUs = 0;          // alarm start to the tick that ended it
     bool commandAccepted = true;     // for cases that issue a refused or accepted command
-    bool endedCompleted = false;     // injection end event reported completed
-    bool endedCancelled = false;     // injection or output end reported cancelled
+    bool endedCompleted = false;     // the case's own completion check passed
+    bool endedCancelled = false;     // the alarm was cut off: outputs off, a TEST OUTPUT end reported cancelled
 };
 
 // Expected result, fixed before the run.
@@ -220,51 +220,50 @@ Observed captureDuringAlarm(int run) {
     return o;
 }
 
-// INJECT DEER while armed: the alarm starts at once through the decision's
-// branch, no frame is taken, and the end is reported completed.
-Observed injectedArmed(int run) {
+// TEST OUTPUT, disarmed in manual mode with nothing running: the injected
+// trigger starts the alarm at once through the start a confirmed frame takes,
+// no frame is taken, the end is reported completed and the unit stays disarmed.
+Observed outputTest(int run) {
     Controller c(kThreshold);
     Observed o;
-    c.arm(true);
     const int64_t start = runStart(run);
-    o.commandAccepted = c.injectDetection(start);
+    o.commandAccepted = c.startOutputTest(start);
     o.alarm = c.alarmStart == start; o.source = c.alarmSource;
     const auto taken = c.take();
     o.framesRun = taken.generation ? 1 : 0;
-    const auto begun = c.takeInjectionStart();
+    const auto begun = c.takeOutputTestStart();
     watchAlarm(c, start, start + 6000000, o);
-    const auto end = c.takeInjectionEnd();
-    o.endedCompleted = begun.id == 1 && begun.alarmStartUs == start && end.id == 1 && end.completed &&
-                       end.alarmStartUs == start && end.endedUs == start + o.durationUs && c.armed;
+    const auto end = c.takeOutputTestEnd();
+    o.endedCompleted = begun == 1 && end.id == 1 && end.completed && !c.armed && c.mode == Mode::Manual && c.trial == 0;
     return o;
 }
-// INJECT DEER while disarmed is refused and starts nothing.
-Observed injectedDisarmed(int run) {
+// TEST OUTPUT while armed is refused and starts nothing.
+Observed outputTestArmed(int run) {
     Controller c(kThreshold);
     Observed o;
-    o.commandAccepted = c.injectDetection(runStart(run));
+    c.arm(true);
+    o.commandAccepted = c.startOutputTest(runStart(run));
     o.alarm = c.alarmStart >= 0; o.source = c.alarmSource;
     return o;
 }
-// INJECT DEER while a trial is running, or in sensor mode, is refused.
-Observed injectedBusyOrPir(int run) {
+// TEST OUTPUT while a trial is running, or in sensor mode, is refused.
+Observed outputTestBusyOrPir(int run) {
     Controller c(kThreshold);
     Observed o;
-    c.arm(true); c.startManual(3);
-    const bool busyRefused = !c.injectDetection(runStart(run));
-    c.stop(); c.setMode(Mode::Pir); c.arm(true);
-    const bool pirRefused = !c.injectDetection(runStart(run) + kTickUs);
+    c.startManual(3);
+    const bool busyRefused = !c.startOutputTest(runStart(run));
+    c.stop(); c.setMode(Mode::Pir);
+    const bool pirRefused = !c.startOutputTest(runStart(run) + kTickUs);
     o.commandAccepted = !(busyRefused && pirRefused);
     o.alarm = c.alarmStart >= 0; o.source = c.alarmSource;
     return o;
 }
-// STOP one second into an injected alarm: outputs off, end reported cancelled.
-Observed stopDuringInjection(int run) {
+// STOP one second into the injected alarm: outputs off, end reported cancelled.
+Observed stopDuringOutputTest(int run) {
     Controller c(kThreshold);
     Observed o;
-    c.arm(true);
     const int64_t start = runStart(run);
-    o.commandAccepted = c.injectDetection(start);
+    o.commandAccepted = c.startOutputTest(start);
     o.alarm = c.alarmStart == start; o.source = c.alarmSource;
     bool white = false, tone = false;
     for (int64_t s = start; s < start + 1000000; s += kTickUs) {
@@ -276,29 +275,29 @@ Observed stopDuringInjection(int run) {
     c.stop();
     const auto out = c.tick(start + 1000000);
     o.durationUs = 1000000;
-    const auto end = c.takeInjectionEnd();
-    o.endedCancelled = end.id == 1 && !end.completed && end.endedUs < 0 && !out.white && !out.tone;
+    const auto end = c.takeOutputTestEnd();
+    o.endedCancelled = end.id == 1 && !end.completed && !out.white && !out.tone;
     return o;
 }
-// A second INJECT DEER during the injected alarm is refused and does not restart it.
-Observed secondInjection(int run) {
+// A second TEST OUTPUT during the injected alarm is refused and does not restart
+// it; after the alarm it is still refused until the last run's end is taken.
+Observed secondOutputTest(int run) {
     Controller c(kThreshold);
     Observed o;
-    c.arm(true);
     const int64_t start = runStart(run);
-    c.injectDetection(start);
-    o.commandAccepted = c.injectDetection(start + 2000000);
+    c.startOutputTest(start);
+    o.commandAccepted = c.startOutputTest(start + 2000000);
     o.alarm = c.alarmStart == start; o.source = c.alarmSource;
     watchAlarm(c, start, start + 6000000, o);
-    // After the end event is taken, a new injection is accepted again.
-    c.takeInjectionStart(); c.takeInjectionEnd();
-    o.endedCompleted = c.injectDetection(start + 7000000);
+    const bool refusedWhilePending = !c.startOutputTest(start + 6500000);
+    c.takeOutputTestStart(); c.takeOutputTestEnd();
+    o.endedCompleted = refusedWhilePending && c.startOutputTest(start + 7000000);
     return o;
 }
 
 struct Case { const char* name; const char* what; Observed (*run)(int); Expected expected; };
 constexpr auto R = AlarmSource::Recognition;
-constexpr auto I = AlarmSource::InjectedDetection;
+constexpr auto T = AlarmSource::OutputTest;
 constexpr auto N = AlarmSource::None;
 // name, description, run, {alarm, alarmFrame, source, framesRun, whiteEdges, toneEdges,
 //                          fullDuration, commandAccepted, endedCompleted, endedCancelled}
@@ -323,16 +322,16 @@ const Case kCases[] = {
      {false, 0, N, 0, 0, 0, false, false, true, false}},
     {"capture_during_alarm", "CAPTURE refused during the alarm, accepted after", captureDuringAlarm,
      {true, 2, R, 2, 28, 3, true, true, false, false}},
-    {"inject_armed", "INJECT DEER armed: alarm at once, no frame, completed", injectedArmed,
-     {true, 0, I, 0, 28, 3, true, true, true, false}},
-    {"inject_disarmed", "INJECT DEER disarmed: refused", injectedDisarmed,
+    {"test_output", "TEST OUTPUT disarmed: alarm at once, no frame, completed", outputTest,
+     {true, 0, T, 0, 28, 3, true, true, true, false}},
+    {"test_output_armed", "TEST OUTPUT while armed: refused", outputTestArmed,
      {false, 0, N, 0, 0, 0, false, false, false, false}},
-    {"inject_busy_or_pir", "INJECT DEER during a trial or in sensor mode: refused", injectedBusyOrPir,
+    {"test_output_busy_or_pir", "TEST OUTPUT during a trial or in sensor mode: refused", outputTestBusyOrPir,
      {false, 0, N, 0, 0, 0, false, false, false, false}},
-    {"stop_during_injection", "STOP 1 s into an injected alarm: off, cancelled", stopDuringInjection,
-     {true, 0, I, 0, 5, 1, false, true, false, true}},
-    {"second_injection", "INJECT DEER during the injected alarm: refused, no restart", secondInjection,
-     {true, 0, I, 0, 28, 3, true, false, true, false}},
+    {"stop_during_test_output", "STOP 1 s into the injected alarm: off, cancelled", stopDuringOutputTest,
+     {true, 0, T, 0, 5, 1, false, true, false, true}},
+    {"second_test_output", "TEST OUTPUT again during or just after it: refused", secondOutputTest,
+     {true, 0, T, 0, 28, 3, true, false, true, false}},
 };
 }  // namespace
 
@@ -341,17 +340,17 @@ int main() {
                 "%d runs per case, output tick %lld us, frame period from %lld us\n",
                 double(kThreshold), kRuns, static_cast<long long>(kTickUs),
                 static_cast<long long>(kFramePeriodUs));
-    // The command the documents name parses as the injection command.
-    bool ok = parseCommand("INJECT DEER").kind == CommandKind::InjectDeer &&
-              parseCommand("INJECT").kind == CommandKind::Invalid &&
-              parseCommand("INJECT DEER now").kind == CommandKind::Invalid;
-    if (!ok) std::printf("FAIL command parsing of INJECT DEER\n");
+    // The injection command parses only as the whole line TEST OUTPUT.
+    bool ok = parseCommand("TEST OUTPUT").kind == CommandKind::OutputTest &&
+              parseCommand("TEST").kind == CommandKind::Invalid &&
+              parseCommand("TEST OUTPUT now").kind == CommandKind::Invalid;
+    if (!ok) std::printf("FAIL command parsing of TEST OUTPUT\n");
     const int total = int(sizeof(kCases) / sizeof(kCases[0]));
     int matched = 0;
     for (const auto& item : kCases) {
         int passed = 0;
         for (int run = 0; run < kRuns; ++run) passed += same(item.run(run), item.expected) ? 1 : 0;
-        std::printf("%s %-22s %2d/%d  %s\n", passed == kRuns ? "PASS" : "FAIL", item.name, passed, kRuns, item.what);
+        std::printf("%s %-24s %2d/%d  %s\n", passed == kRuns ? "PASS" : "FAIL", item.name, passed, kRuns, item.what);
         if (passed == kRuns) ++matched;
     }
     ok = ok && matched == total;
