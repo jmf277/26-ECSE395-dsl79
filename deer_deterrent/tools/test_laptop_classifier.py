@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from PIL import Image
 import laptop_classifier
 from laptop_classifier import Device, process_manifest, fnv1a, validate_manifest, strict_json, BurstGates, EspDetPredictor
@@ -205,6 +205,31 @@ class MainLoopTests(unittest.TestCase):
             out,rows=self.run_client(board,[.1],'--capture')
         self.assertEqual(board.refusals,1);self.assertEqual(board.verdicts,['false'])
         self.assertTrue(any('capture_deferred' in r for r in rows))
+    def test_ten_seconds_without_a_good_poll_end_the_session(self):
+        # The device answers the opening status and one poll, then stops answering. The clock advances 4 s
+        # at every reading, so the first failed poll comes more than 10 s after the last good one.
+        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);out=Path(temp.name)/'session'
+        state=dict(protocol=3,boot=BOOT,pir_ready=False,burst_active=False,alarm_active=False,cooldown_seconds=0)
+        class SilentDevice:
+            polls=0
+            def __init__(self,base):pass
+            def status(self):
+                SilentDevice.polls+=1
+                if SilentDevice.polls>2:raise URLError('no route to the device')
+                return dict(state)
+            def request(self,path,fields=None,image=False):
+                if path=='/burst':return dict(protocol=3,boot=BOOT,burst=0,accepting_results=False,images=[])
+                return dict(armed=False,alarm_active=False)
+        clock=iter(range(0,100000,4))
+        with mock.patch('builtins.print'),mock.patch.object(laptop_classifier,'Device',SilentDevice),\
+             mock.patch.object(laptop_classifier.time,'monotonic',lambda:float(next(clock))),\
+             mock.patch.object(laptop_classifier.time,'sleep',lambda seconds:None):
+            with self.assertRaises(RuntimeError) as caught:
+                laptop_classifier.main(['--checkpoint','x.pt','--model-project','m','--esp-detection','e','--url','http://device',
+                                        '--output',str(out),'--seconds','600','--poll','0.25'],predictor_factory=lambda *a:Predictor())
+        self.assertEqual(str(caught.exception),'device unreachable for 10 s');self.assertEqual(SilentDevice.polls,3)
+        rows=[json.loads(x) for x in (out/'events.jsonl').read_text().splitlines()]
+        self.assertEqual(sum('poll_error' in r for r in rows),1);self.assertIn('stop',rows[-1])
     def test_refused_request_releases_its_reply(self):
         with EmulatedBoard([photo(62)],refuse_first_capture=True) as board:
             with self.assertRaises(HTTPError) as caught:Device(board.url).request('/capture',{},image=True)

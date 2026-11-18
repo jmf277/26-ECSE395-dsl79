@@ -270,7 +270,7 @@ def main(argv=None, predictor_factory=None):
     events = (args.output/"events.jsonl").open("x",encoding="utf-8")
     def event(**row):
         events.write(json.dumps(dict(host_monotonic=time.monotonic(),**row),allow_nan=False)+"\n");events.flush()
-    failures = 0
+    last_good = time.monotonic()
     try:
         event(stop=device.request("/stop",{}))
         if args.arm:
@@ -299,11 +299,10 @@ def main(argv=None, predictor_factory=None):
                     score = row.get("prediction",{}).get("score")
                     print(f"Photo {row['id']}: score={score}, deer={row.get('deer')}, confirmed={row.get('confirmed')}, "
                           f"receipt={row['alarm_receipt']}" + (f", error={row['error']}" if row.get("error") else ""))
-                failures = 0
+                last_good = time.monotonic()
             except (URLError, TimeoutError, ConnectionError) as exc:
-                failures += 1
                 event(poll_error=f"{type(exc).__name__}: {exc}")
-                if failures * args.poll >= 10:
+                if time.monotonic() - last_good >= 10:
                     raise RuntimeError("device unreachable for 10 s") from exc
             time.sleep(args.poll)
     except KeyboardInterrupt:
