@@ -46,9 +46,10 @@ def status_line(command,**state):
     return ('TRIAL_STATUS '+json.dumps(item)+'\n').encode()
 
 class FakePort:
-    """Stands in for pyserial's port: answers like the trial program and can fail."""
-    def __init__(self,first_state=None,lose_after=None,after_stop=b'',drip=0):
+    """Stands in for pyserial's port: answers like the trial program, can fail and can stall mid-transfer."""
+    def __init__(self,first_state=None,lose_after=None,after_stop=b'',drip=0,stall_after=None,stall_seconds=0.0):
         self.first_state=first_state or {};self.lose_after=lose_after;self.after_stop=after_stop;self.drip=drip
+        self.stall_after=stall_after;self.stall_seconds=stall_seconds;self.stall_left=None;self.stalled_at=None
         self.written=[];self.outgoing=bytearray();self.reads=0;self.closed=False;self.stops=0;self.lock=threading.Lock()
     def open(self):pass
     def write(self,data):
@@ -58,7 +59,11 @@ class FakePort:
             if command=='STATUS' and len(self.written)==1:self.outgoing+=status_line('STATUS',**self.first_state)
             elif command=='STOP':
                 self.stops+=1;self.outgoing+=status_line('STOP')
-                if self.stops>1:self.outgoing+=self.after_stop
+                if self.stops>1:
+                    # With stall_after, the closing STOP's reply and that many bytes of after_stop go out,
+                    # then nothing for stall_seconds, then the rest.
+                    if self.stall_after is not None:self.stall_left=len(self.outgoing)+self.stall_after
+                    self.outgoing+=self.after_stop
             else:self.outgoing+=status_line(command)
     def read(self,size):
         self.reads+=1
@@ -66,7 +71,13 @@ class FakePort:
             raise SerialException('device reports readiness to read but returned no data')
         with self.lock:
             size=min(size,self.drip) if self.drip else size
+            if self.stall_left==0:
+                if self.stalled_at is None:self.stalled_at=time.monotonic()
+                if time.monotonic()-self.stalled_at<self.stall_seconds:size=0
+                else:self.stall_left=None
+            elif self.stall_left is not None:size=min(size,self.stall_left)
             chunk=bytes(self.outgoing[:size]);del self.outgoing[:size]
+            if self.stall_left:self.stall_left-=len(chunk)
         if not chunk:time.sleep(0.002)
         return chunk
     def close(self):self.closed=True
@@ -116,9 +127,12 @@ class LiveRecorderTests(unittest.TestCase):
         self.assertEqual(sent,port.written);self.assertEqual(sent,['STATUS','STOP'])
         self.assertTrue((out/'index.html').exists())
     def test_quit_waits_for_the_outstanding_frame(self):
+        # The port falls silent for 0.6 s halfway through the frame, longer than the 0.2 s quiet time,
+        # so QUIT closes the session with the whole frame only if it waits for the open transfer.
         raw,jpeg,tensor=fixture(schema=2)
-        port=FakePort(after_stop=raw,drip=700)
+        port=FakePort(after_stop=raw,drip=700,stall_after=len(raw)//2,stall_seconds=0.6)
         code,out,rows,manifest,summary=self.run_main(port,[])
+        self.assertIsNotNone(port.stalled_at)
         self.assertEqual(code,0);self.assertEqual(summary['complete_valid_pairs'],1)
         self.assertEqual(next(out.glob('*.i8')).read_bytes(),tensor)
     def test_missing_pyserial_leaves_no_session_folder(self):
