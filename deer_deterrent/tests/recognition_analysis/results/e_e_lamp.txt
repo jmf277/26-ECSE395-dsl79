@@ -1,0 +1,104 @@
+--- paint the ceiling light out (flat fill from its surroundings), all 68 frames: board score, score without the light, new top box
+1 t 1 0.223 [226, 212, 277, 239] -> 0.0 None
+2 t 1 0.223 [227, 213, 277, 239] -> 0.095 [55, 107, 134, 179]
+3 t 1 0.269 [225, 212, 275, 239] -> 0.0 None
+4 t 1 0.148 [226, 212, 276, 239] -> 0.0 None
+5 t 1 0.269 [223, 209, 277, 239] -> 0.095 [162, 102, 205, 138]
+6 t 1 0.321 [224, 210, 277, 239] -> 0.0 None
+7 t 1 0.182 [225, 212, 277, 239] -> 0.0 None
+8 t 1 0.223 [225, 212, 276, 239] -> 0.0 None
+9 t 1 0.182 [225, 209, 276, 239] -> 0.0 None
+10 t 1 0.182 [225, 212, 276, 239] -> 0.0 None
+11 t 2 0.095 [229, 217, 271, 239] -> 0.0 None
+12 t 2 0.095 [228, 217, 270, 239] -> 0.0 None
+13 t 2 0.095 [229, 217, 271, 239] -> 0.0 None
+14 t 2 0.0 None -> 0.0 None
+15 t 2 0.0 None -> 0.0 None
+16 t 2 0.095 [230, 217, 270, 239] -> 0.0 None
+17 t 2 0.0 None -> 0.0 None
+18 t 2 0.119 [229, 217, 269, 239] -> 0.0 None
+19 t 2 0.0 None -> 0.0 None
+20 t 2 0.0 None -> 0.0 None
+21 t 3 0.095 [138, 34, 185, 88] -> 0.0 None
+22 t 3 0.095 [140, 35, 187, 92] -> 0.0 None
+23 t 3 0.0 None -> 0.0 None
+24 t 3 0.0 None -> 0.0 None
+25 t 3 0.0 None -> 0.0 None
+26 t 3 0.0 None -> 0.0 None
+27 t 3 0.0 None -> 0.0 None
+28 t 3 0.0 None -> 0.0 None
+29 t 3 0.0 None -> 0.0 None
+30 t 3 0.0 None -> 0.0 None
+31 t 4 0.0 None -> 0.0 None
+32 t 4 0.095 [230, 213, 280, 239] -> 0.0 None
+33 t 4 0.0 None -> 0.0 None
+34 t 4 0.0 None -> 0.0 None
+35 t 4 0.0 None -> 0.0 None
+36 t 4 0.0 None -> 0.0 None
+37 t 4 0.0 None -> 0.0 None
+38 t 4 0.0 None -> 0.0 None
+39 t 4 0.0 None -> 0.0 None
+40 t 4 0.0 None -> 0.0 None
+41 t 5 0.0 None -> 0.0 None
+42 t 5 0.0 None -> 0.0 None
+43 t 5 0.0 None -> 0.0 None
+44 t 5 0.0 None -> 0.0 None
+45 t 5 0.0 None -> 0.0 None
+46 t 5 0.0 None -> 0.0 None
+47 t 5 0.0 None -> 0.0 None
+48 t 5 0.0 None -> 0.0 None
+49 t 5 0.0 None -> 0.0 None
+50 t 5 0.0 None -> 0.0 None
+51 t 6 0.5 [218, 209, 272, 239] -> 0.0 None
+52 t 6 0.5 [217, 209, 272, 239] -> 0.0 None
+53 t 6 0.5 [219, 210, 272, 239] -> 0.0 None
+54 t 6 0.5 [217, 208, 272, 239] -> 0.0 None
+55 t 6 0.5 [218, 208, 272, 239] -> 0.0 None
+56 t 6 0.5 [218, 209, 272, 239] -> 0.0 None
+57 t 6 0.0 None -> 0.0 None
+58 t 6 0.119 [159, 92, 225, 143] -> 0.095 [159, 92, 225, 143]
+59 t 6 0.119 [230, 218, 274, 239] -> 0.0 None
+60 t 6 0.095 [169, 101, 227, 142] -> 0.095 [169, 101, 228, 144]
+61 t 6 0.119 [229, 218, 273, 239] -> 0.095 [169, 101, 227, 142]
+62 t 6 0.148 [168, 101, 226, 141] -> 0.119 [159, 92, 225, 143]
+63 t 6 0.5 [218, 209, 272, 239] -> 0.0 None
+64 t 6 0.438 [219, 209, 272, 239] -> 0.0 None
+65 t 6 0.5 [218, 208, 272, 239] -> 0.0 None
+66 t 6 0.5 [217, 209, 273, 239] -> 0.0 None
+67 t 6 0.438 [218, 209, 274, 239] -> 0.0 None
+68 t 6 0.5 [217, 210, 272, 239] -> 0.0 None
+[((1, 'light'), 10), ((2, 'light'), 5), ((2, 'none'), 5), ((3, 'none'), 8), ((3, 'other'), 2), ((4, 'light'), 1), ((4, 'none'), 9), ((5, 'none'), 10), ((6, 'light'), 14), ((6, 'none'), 1), ((6, 'other'), 3)]
+--- scale the real ceiling light crop (from frame 56) and paste it back on its own room at the same center
+scale 0.25 light px wide (224 units) about 10 score 0.182 head logits [-1.5, -6.5, -13.0] [235, 217, 260, 231]
+scale 0.5 light px wide (224 units) about 19 score 0.321 head logits [-0.75, -4.5, -13.0] [224, 210, 262, 235]
+scale 0.75 light px wide (224 units) about 28 score 0.378 head logits [-0.5, -5.0, -14.5] [212, 209, 265, 236]
+scale 1.0 light px wide (224 units) about 38 score 0.5 head logits [0.0, -4.0, -13.0] [218, 208, 273, 239]
+scale 1.25 light px wide (224 units) about 48 score 0.438 head logits [-0.25, -4.0, -13.5] [216, 207, 275, 238]
+scale 1.5 light px wide (224 units) about 57 score 0.438 head logits [-0.25, -3.5, -12.5] [215, 205, 277, 237]
+scale 2 light px wide (224 units) about 76 score 0.0 head logits [-3.25, -5.0, -13.0] None
+scale 2.5 light px wide (224 units) about 95 score 0.0 head logits [-2.5, -6.0, -12.5] None
+scale 3 light px wide (224 units) about 114 score 0.0 head logits [-3.0, -6.0, -13.0] None
+scale 4 light px wide (224 units) about 152 score 0.0 head logits [-3.25, -4.0, -14.5] None
+--- move the ceiling light (same size, same crop) to other places in the same empty room
+(172, 178) score 0.378 [(0.378, [217, 207, 270, 235])]
+(112, 178) score 0.378 [(0.378, [132, 207, 182, 235])]
+(40, 178) score 0.223 [(0.223, [32, 208, 79, 235])]
+(172, 120) score 0.269 [(0.269, [221, 130, 265, 152])]
+(112, 120) score 0.321 [(0.321, [136, 127, 185, 157]), (0.119, [135, 119, 187, 154]), (0.119, [135, 136, 183, 156])]
+(40, 120) score 0.0 []
+(172, 60) score 0.0 []
+(112, 60) score 0.0 []
+(40, 60) score 0.0 []
+--- flip the frame 56 input vertically / horizontally, and flip only the light in place
+as saved 0.5 [(0.5, [218, 209, 272, 239]), (0.148, [219, 212, 272, 239])]
+vertical flip 0.0 []
+horizontal flip 0.321 [(0.321, [45, 212, 100, 239]), (0.119, [47, 219, 99, 239])]
+180 rotation 0.0 []
+light crop flipped in place 0.0 []
+light crop re-pasted upright 0.5 [(0.5, [218, 208, 273, 239]), (0.148, [212, 211, 267, 237]), (0.148, [219, 213, 276, 239])]
+--- put the real ceiling light crop onto a print frame (f50, D1 at 2.5in, score 0), lower right
+f50+light 0.148 [(0.148, [204, 206, 275, 239])]
+--- on plain dark and plain mid fields
+field 5 0.321 [(0.321, [220, 210, 270, 238]), (0.269, [227, 217, 272, 238]), (0.095, [222, 214, 272, 239])]
+field 20 0.321 [(0.321, [221, 209, 272, 238]), (0.095, [222, 214, 272, 239])]
+field 57 0.378 [(0.378, [208, 207, 269, 239]), (0.182, [216, 215, 272, 239]), (0.148, [205, 212, 274, 239])]

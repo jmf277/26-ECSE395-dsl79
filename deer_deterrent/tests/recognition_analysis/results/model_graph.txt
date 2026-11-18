@@ -1,0 +1,791 @@
+EDL2 header bytes 4-8 (not encrypted if zero): 00000000 payload 499696
+ir_version 7 graph main_graph
+producer None None doc None
+opset []
+metadata_props fields False
+test_inputs_value 0 test_outputs_value 0
+--- inputs/outputs
+input images exponents [-7] type/shape (3, [1, 224, 224, 3])
+output score2 exponents [-1] type/shape (3, [1, 7, 7, 1])
+output box2 exponents [-4] type/shape (3, [1, 7, 7, 4])
+output box0 exponents [-4] type/shape (3, [1, 28, 28, 4])
+output score0 exponents [-2] type/shape (3, [1, 28, 28, 1])
+output box1 exponents [-4] type/shape (3, [1, 14, 14, 4])
+output score1 exponents [-1] type/shape (3, [1, 14, 14, 1])
+--- nodes
+  0 Conv             /model.0/conv/Conv
+     in   images exp ('in', [-7])
+     init model.0.conv.weight dims [3, 3, 3, 16] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 432
+     init model.0.conv.bias dims [16] dtype 6 exp [-13] doc layout ==> UNK rawlen 64
+     out  /model.0/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [2, 2]}
+  1 Conv             /model.1/depthwise/Conv
+     in   /model.0/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_709 dims [3, 3, 16, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 144
+     init onnx::Conv_710 dims [16] dtype 6 exp [-10] doc layout ==> UNK rawlen 64
+     out  /model.1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 16, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [2, 2]}
+  2 Conv             /model.1/pointwise/Conv
+     in   /model.1/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_712 dims [1, 1, 16, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 512
+     init onnx::Conv_713 dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.1/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+  3 Conv             /model.2/cv1/conv/Conv
+     in   /model.1/act_1/Relu_output_0 exp ('value', [-3])
+     init model.2.cv1.conv.weight dims [1, 1, 32, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1024
+     init model.2.cv1.conv.bias dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.2/cv1/act/Relu_output_0 exp ('value', [-2])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+  4 Conv             /model.2/m.0/cv1/depthwise/Conv
+     in   /model.2/cv1/act/Relu_output_0 exp ('value', [-2])
+     init onnx::Conv_715 dims [3, 3, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 288
+     init onnx::Conv_716 dims [32] dtype 6 exp [-8] doc layout ==> UNK rawlen 128
+     out  /model.2/m.0/cv1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+  5 Conv             /model.2/m.0/cv1/pointwise/Conv
+     in   /model.2/m.0/cv1/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_718 dims [1, 1, 32, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1024
+     init onnx::Conv_719 dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.2/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+  6 Conv             /model.2/m.0/cv2/depthwise/Conv
+     in   /model.2/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_721 dims [3, 3, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 288
+     init onnx::Conv_722 dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.2/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+  7 Conv             /model.2/m.0/cv2/pointwise/Conv
+     in   /model.2/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_724 dims [1, 1, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1024
+     init onnx::Conv_725 dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.2/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+  8 Conv             /model.2/cv2/conv/Conv
+     in   /model.2/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     init model.2.cv2.conv.weight dims [1, 1, 32, 64] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 2048
+     init model.2.cv2.conv.bias dims [64] dtype 6 exp [-9] doc layout ==> UNK rawlen 256
+     out  /model.2/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+  9 Conv             /model.3/depthwise/Conv
+     in   /model.2/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_727 dims [3, 3, 64, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 576
+     init onnx::Conv_728 dims [64] dtype 6 exp [-9] doc layout ==> UNK rawlen 256
+     out  /model.3/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 64, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [2, 2]}
+ 10 Conv             /model.3/pointwise/Conv
+     in   /model.3/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_730 dims [1, 1, 64, 64] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 4096
+     init onnx::Conv_731 dims [64] dtype 6 exp [-9] doc layout ==> UNK rawlen 256
+     out  /model.3/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 11 Conv             /model.4/cv1/conv/Conv
+     in   /model.3/act_1/Relu_output_0 exp ('value', [-3])
+     init model.4.cv1.conv.weight dims [1, 1, 64, 64] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 4096
+     init model.4.cv1.conv.bias dims [64] dtype 6 exp [-9] doc layout ==> UNK rawlen 256
+     out  /model.4/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 12 Split            /model.4/Split
+     in   /model.4/cv1/act/Relu_output_0 exp ('value', [-4])
+     init PPQ_Variable_2 dims [2] dtype 7 exp [0] doc layout ==> UNK rawlen 16
+     out  /model.4/Split_output_0 exp ('value', [-4])
+     out  /model.4/Split_output_1 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 13 RequantizeLinear PPQ_Operation_1
+     in   /model.4/Split_output_0 exp ('value', [-4])
+     init PPQ_Variable_8 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_9 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_7 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 14 Conv             /model.4/m.0/cv1/depthwise/Conv
+     in   /model.4/Split_output_1 exp ('value', [-4])
+     init onnx::Conv_733 dims [3, 3, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 288
+     init onnx::Conv_734 dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.4/m.0/cv1/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 15 RequantizeLinear PPQ_Operation_0
+     in   /model.4/Split_output_1 exp ('value', [-4])
+     init PPQ_Variable_5 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_6 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_4 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 16 RequantizeLinear PPQ_Operation_2
+     in   /model.4/Split_output_1 exp ('value', [-4])
+     init PPQ_Variable_11 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_12 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_10 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 17 Conv             /model.4/m.0/cv1/pointwise/Conv
+     in   /model.4/m.0/cv1/act/Relu_output_0 exp ('value', [-5])
+     init onnx::Conv_736 dims [1, 1, 32, 16] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 512
+     init onnx::Conv_737 dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.4/m.0/cv1/act_1/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 18 Conv             /model.4/m.0/cv2/depthwise/Conv
+     in   /model.4/m.0/cv1/act_1/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_739 dims [3, 3, 16, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 144
+     init onnx::Conv_740 dims [16] dtype 6 exp [-10] doc layout ==> UNK rawlen 64
+     out  /model.4/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 16, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 19 Conv             /model.4/m.0/cv2/pointwise/Conv
+     in   /model.4/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_742 dims [1, 1, 16, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 512
+     init onnx::Conv_743 dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.4/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 20 Add              /model.4/m.0/Add
+     in   PPQ_Variable_4 exp ('value', [-3])
+     in   /model.4/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     out  /model.4/m.0/Add_output_0 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 21 Concat           /model.4/Concat
+     in   PPQ_Variable_7 exp ('value', [-3])
+     in   PPQ_Variable_10 exp ('value', [-3])
+     in   /model.4/m.0/Add_output_0 exp ('value', [-3])
+     out  /model.4/Concat_output_0 exp ('value', [-3])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 22 Conv             /model.4/cv2/conv/Conv
+     in   /model.4/Concat_output_0 exp ('value', [-3])
+     init model.4.cv2.conv.weight dims [1, 1, 96, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 6144
+     init model.4.cv2.conv.bias dims [64] dtype 6 exp [-10] doc layout ==> UNK rawlen 256
+     out  /model.4/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 23 Conv             /model.5/cv1/conv/Conv
+     in   /model.4/cv2/act/Relu_output_0 exp ('value', [-4])
+     init model.5.cv1.conv.weight dims [1, 1, 64, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 4096
+     init model.5.cv1.conv.bias dims [64] dtype 6 exp [-11] doc layout ==> UNK rawlen 256
+     out  /model.5/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 24 Conv             /model.5/cv2/conv/Conv
+     in   /model.5/cv1/act/Relu_output_0 exp ('value', [-4])
+     init model.5.cv2.conv.weight dims [3, 3, 64, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 576
+     init model.5.cv2.conv.bias dims [64] dtype 6 exp [-11] doc layout ==> UNK rawlen 256
+     out  /model.5/cv2/conv/Conv_output_0 exp ('value', [-4])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 64, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [2, 2]}
+ 25 Conv             /model.6/cv1/conv/Conv
+     in   /model.5/cv2/conv/Conv_output_0 exp ('value', [-4])
+     init model.6.cv1.conv.weight dims [1, 1, 64, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 4096
+     init model.6.cv1.conv.bias dims [64] dtype 6 exp [-11] doc layout ==> UNK rawlen 256
+     out  /model.6/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 26 Split            /model.6/Split
+     in   /model.6/cv1/act/Relu_output_0 exp ('value', [-4])
+     init PPQ_Variable_3 dims [2] dtype 7 exp [0] doc layout ==> UNK rawlen 16
+     out  /model.6/Split_output_0 exp ('value', [-4])
+     out  /model.6/Split_output_1 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 27 RequantizeLinear PPQ_Operation_4
+     in   /model.6/Split_output_0 exp ('value', [-4])
+     init PPQ_Variable_17 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_18 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_16 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 28 Conv             /model.6/m.0/cv1/conv/Conv
+     in   /model.6/Split_output_1 exp ('value', [-4])
+     init model.6.m.0.cv1.conv.weight dims [1, 1, 32, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 512
+     init model.6.m.0.cv1.conv.bias dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.6/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 29 Conv             /model.6/m.0/cv2/conv/Conv
+     in   /model.6/Split_output_1 exp ('value', [-4])
+     init model.6.m.0.cv2.conv.weight dims [1, 1, 32, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 512
+     init model.6.m.0.cv2.conv.bias dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.6/m.0/cv2/act/Relu_output_0 exp ('value', [-2])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 30 RequantizeLinear PPQ_Operation_5
+     in   /model.6/Split_output_1 exp ('value', [-4])
+     init PPQ_Variable_20 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_21 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_19 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 31 Conv             /model.6/m.0/m/m.0/cv1/conv/Conv
+     in   /model.6/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     init model.6.m.0.m.0.cv1.conv.weight dims [3, 3, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2304
+     init model.6.m.0.m.0.cv1.conv.bias dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.6/m.0/m/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 32 Conv             /model.6/m.0/m/m.0/cv2/conv/Conv
+     in   /model.6/m.0/m/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     init model.6.m.0.m.0.cv2.conv.weight dims [3, 3, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2304
+     init model.6.m.0.m.0.cv2.conv.bias dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.6/m.0/m/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 33 Add              /model.6/m.0/m/m.0/Add
+     in   /model.6/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     in   /model.6/m.0/m/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     out  /model.6/m.0/m/m.0/Add_output_0 exp ('value', [-4])
+     attr {'quant_type': 'S8'}
+ 34 Conv             /model.6/m.0/m/m.1/cv1/conv/Conv
+     in   /model.6/m.0/m/m.0/Add_output_0 exp ('value', [-4])
+     init model.6.m.0.m.1.cv1.conv.weight dims [3, 3, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2304
+     init model.6.m.0.m.1.cv1.conv.bias dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.6/m.0/m/m.1/cv1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 35 RequantizeLinear PPQ_Operation_3
+     in   /model.6/m.0/m/m.0/Add_output_0 exp ('value', [-4])
+     init PPQ_Variable_14 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_15 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_13 exp ('value', [-2])
+     attr {'quant_type': 'S8'}
+ 36 Conv             /model.6/m.0/m/m.1/cv2/conv/Conv
+     in   /model.6/m.0/m/m.1/cv1/act/Relu_output_0 exp ('value', [-3])
+     init model.6.m.0.m.1.cv2.conv.weight dims [3, 3, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2304
+     init model.6.m.0.m.1.cv2.conv.bias dims [16] dtype 6 exp [-10] doc layout ==> UNK rawlen 64
+     out  /model.6/m.0/m/m.1/cv2/act/Relu_output_0 exp ('value', [-2])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 37 Add              /model.6/m.0/m/m.1/Add
+     in   PPQ_Variable_13 exp ('value', [-2])
+     in   /model.6/m.0/m/m.1/cv2/act/Relu_output_0 exp ('value', [-2])
+     out  /model.6/m.0/m/m.1/Add_output_0 exp ('value', [-2])
+     attr {'quant_type': 'S8'}
+ 38 Concat           /model.6/m.0/Concat
+     in   /model.6/m.0/m/m.1/Add_output_0 exp ('value', [-2])
+     in   /model.6/m.0/cv2/act/Relu_output_0 exp ('value', [-2])
+     out  /model.6/m.0/Concat_output_0 exp ('value', [-2])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 39 Conv             /model.6/m.0/cv3/conv/Conv
+     in   /model.6/m.0/Concat_output_0 exp ('value', [-2])
+     init model.6.m.0.cv3.conv.weight dims [1, 1, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1024
+     init model.6.m.0.cv3.conv.bias dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.6/m.0/cv3/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 40 Concat           /model.6/Concat
+     in   PPQ_Variable_16 exp ('value', [-3])
+     in   PPQ_Variable_19 exp ('value', [-3])
+     in   /model.6/m.0/cv3/act/Relu_output_0 exp ('value', [-3])
+     out  /model.6/Concat_output_0 exp ('value', [-3])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 41 Conv             /model.6/cv2/conv/Conv
+     in   /model.6/Concat_output_0 exp ('value', [-3])
+     init model.6.cv2.conv.weight dims [1, 1, 96, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 6144
+     init model.6.cv2.conv.bias dims [64] dtype 6 exp [-10] doc layout ==> UNK rawlen 256
+     out  /model.6/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 42 Conv             /model.7/cv1/conv/Conv
+     in   /model.6/cv2/act/Relu_output_0 exp ('value', [-4])
+     init model.7.cv1.conv.weight dims [1, 1, 64, 128] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 8192
+     init model.7.cv1.conv.bias dims [128] dtype 6 exp [-11] doc layout ==> UNK rawlen 512
+     out  /model.7/cv1/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 43 Conv             /model.7/cv2/conv/Conv
+     in   /model.7/cv1/act/Relu_output_0 exp ('value', [-5])
+     init model.7.cv2.conv.weight dims [3, 3, 128, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1152
+     init model.7.cv2.conv.bias dims [128] dtype 6 exp [-12] doc layout ==> UNK rawlen 512
+     out  /model.7/cv2/conv/Conv_output_0 exp ('value', [-5])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [2, 2]}
+ 44 Conv             /model.8/cv1/conv/Conv
+     in   /model.7/cv2/conv/Conv_output_0 exp ('value', [-5])
+     init model.8.cv1.conv.weight dims [1, 1, 128, 128] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 16384
+     init model.8.cv1.conv.bias dims [128] dtype 6 exp [-12] doc layout ==> UNK rawlen 512
+     out  /model.8/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 45 Split            /model.8/Split
+     in   /model.8/cv1/act/Relu_output_0 exp ('value', [-4])
+     init _v_429 dims [2] dtype 7 exp [0] doc layout ==> UNK rawlen 16
+     out  /model.8/Split_output_0 exp ('value', [-4])
+     out  /model.8/Split_output_1 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 46 Conv             /model.8/m.0/cv1/conv/Conv
+     in   /model.8/Split_output_1 exp ('value', [-4])
+     init model.8.m.0.cv1.conv.weight dims [1, 1, 64, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2048
+     init model.8.m.0.cv1.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.8/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 47 Conv             /model.8/m.0/cv2/conv/Conv
+     in   /model.8/Split_output_1 exp ('value', [-4])
+     init model.8.m.0.cv2.conv.weight dims [1, 1, 64, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2048
+     init model.8.m.0.cv2.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.8/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 48 Conv             /model.8/m.0/m/m.0/cv1/conv/Conv
+     in   /model.8/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     init model.8.m.0.m.0.cv1.conv.weight dims [3, 3, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 9216
+     init model.8.m.0.m.0.cv1.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.8/m.0/m/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 49 Conv             /model.8/m.0/m/m.0/cv2/conv/Conv
+     in   /model.8/m.0/m/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     init model.8.m.0.m.0.cv2.conv.weight dims [3, 3, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 9216
+     init model.8.m.0.m.0.cv2.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.8/m.0/m/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 50 Add              /model.8/m.0/m/m.0/Add
+     in   /model.8/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     in   /model.8/m.0/m/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     out  /model.8/m.0/m/m.0/Add_output_0 exp ('value', [-4])
+     attr {'quant_type': 'S8'}
+ 51 Conv             /model.8/m.0/m/m.1/cv1/conv/Conv
+     in   /model.8/m.0/m/m.0/Add_output_0 exp ('value', [-4])
+     init model.8.m.0.m.1.cv1.conv.weight dims [3, 3, 32, 32] dtype 3 exp [-8] doc layout ==> (N/16)HWC16 rawlen 9216
+     init model.8.m.0.m.1.cv1.conv.bias dims [32] dtype 6 exp [-12] doc layout ==> UNK rawlen 128
+     out  /model.8/m.0/m/m.1/cv1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 52 RequantizeLinear PPQ_Operation_6
+     in   /model.8/m.0/m/m.0/Add_output_0 exp ('value', [-4])
+     init PPQ_Variable_23 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_24 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_22 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 53 Conv             /model.8/m.0/m/m.1/cv2/conv/Conv
+     in   /model.8/m.0/m/m.1/cv1/act/Relu_output_0 exp ('value', [-3])
+     init model.8.m.0.m.1.cv2.conv.weight dims [3, 3, 32, 32] dtype 3 exp [-8] doc layout ==> (N/16)HWC16 rawlen 9216
+     init model.8.m.0.m.1.cv2.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.8/m.0/m/m.1/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 54 Add              /model.8/m.0/m/m.1/Add
+     in   PPQ_Variable_22 exp ('value', [-3])
+     in   /model.8/m.0/m/m.1/cv2/act/Relu_output_0 exp ('value', [-3])
+     out  /model.8/m.0/m/m.1/Add_output_0 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 55 Concat           /model.8/m.0/Concat
+     in   /model.8/m.0/m/m.1/Add_output_0 exp ('value', [-3])
+     in   /model.8/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     out  /model.8/m.0/Concat_output_0 exp ('value', [-3])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 56 Conv             /model.8/m.0/cv3/conv/Conv
+     in   /model.8/m.0/Concat_output_0 exp ('value', [-3])
+     init model.8.m.0.cv3.conv.weight dims [1, 1, 64, 64] dtype 3 exp [-8] doc layout ==> (N/16)HWC16 rawlen 4096
+     init model.8.m.0.cv3.conv.bias dims [64] dtype 6 exp [-11] doc layout ==> UNK rawlen 256
+     out  /model.8/m.0/cv3/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 57 Concat           /model.8/Concat
+     in   /model.8/Split_output_0 exp ('value', [-4])
+     in   /model.8/Split_output_1 exp ('value', [-4])
+     in   /model.8/m.0/cv3/act/Relu_output_0 exp ('value', [-4])
+     out  /model.8/Concat_output_0 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 58 Conv             /model.8/cv2/conv/Conv
+     in   /model.8/Concat_output_0 exp ('value', [-4])
+     init model.8.cv2.conv.weight dims [1, 1, 192, 128] dtype 3 exp [-8] doc layout ==> (N/16)HWC16 rawlen 24576
+     init model.8.cv2.conv.bias dims [128] dtype 6 exp [-12] doc layout ==> UNK rawlen 512
+     out  /model.8/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 59 Conv             /model.9/cv1/conv/Conv
+     in   /model.8/cv2/act/Relu_output_0 exp ('value', [-4])
+     init model.9.cv1.conv.weight dims [1, 1, 128, 64] dtype 3 exp [-8] doc layout ==> (N/16)HWC16 rawlen 8192
+     init model.9.cv1.conv.bias dims [64] dtype 6 exp [-12] doc layout ==> UNK rawlen 256
+     out  /model.9/cv1/conv/Conv_output_0 exp ('value', [-4])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 60 MaxPool          /model.9/m/MaxPool
+     in   /model.9/cv1/conv/Conv_output_0 exp ('value', [-4])
+     out  /model.9/m/MaxPool_output_0 exp ('value', [-4])
+     attr {'ceil_mode': 0, 'dilations': [1, 1], 'kernel_shape': [5, 5], 'pads': [2, 2, 2, 2], 'quant_type': 'S8', 'strides': [1, 1]}
+ 61 MaxPool          /model.9/m_1/MaxPool
+     in   /model.9/m/MaxPool_output_0 exp ('value', [-4])
+     out  /model.9/m_1/MaxPool_output_0 exp ('value', [-4])
+     attr {'ceil_mode': 0, 'dilations': [1, 1], 'kernel_shape': [5, 5], 'pads': [2, 2, 2, 2], 'quant_type': 'S8', 'strides': [1, 1]}
+ 62 MaxPool          /model.9/m_2/MaxPool
+     in   /model.9/m_1/MaxPool_output_0 exp ('value', [-4])
+     out  /model.9/m_2/MaxPool_output_0 exp ('value', [-4])
+     attr {'ceil_mode': 0, 'dilations': [1, 1], 'kernel_shape': [5, 5], 'pads': [2, 2, 2, 2], 'quant_type': 'S8', 'strides': [1, 1]}
+ 63 Concat           /model.9/Concat
+     in   /model.9/cv1/conv/Conv_output_0 exp ('value', [-4])
+     in   /model.9/m/MaxPool_output_0 exp ('value', [-4])
+     in   /model.9/m_1/MaxPool_output_0 exp ('value', [-4])
+     in   /model.9/m_2/MaxPool_output_0 exp ('value', [-4])
+     out  /model.9/Concat_output_0 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 64 Conv             /model.9/cv2/conv/Conv
+     in   /model.9/Concat_output_0 exp ('value', [-4])
+     init model.9.cv2.conv.weight dims [1, 1, 256, 128] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 32768
+     init model.9.cv2.conv.bias dims [128] dtype 6 exp [-11] doc layout ==> UNK rawlen 512
+     out  /model.9/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 65 Conv             /model.10/depthwise/Conv
+     in   /model.9/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_745 dims [7, 7, 128, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 6272
+     init onnx::Conv_746 dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.10/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [7, 7], 'pads': [3, 3, 3, 3], 'quant_type': 'S8', 'strides': [1, 1]}
+ 66 Conv             /model.10/pointwise/Conv
+     in   /model.10/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_748 dims [1, 1, 128, 128] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 16384
+     init onnx::Conv_749 dims [128] dtype 6 exp [-11] doc layout ==> UNK rawlen 512
+     out  /model.10/act_1/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 67 Resize           /model.11/Resize
+     in   /model.10/act_1/Relu_output_0 exp ('value', [-4])
+     in    exp None
+     init PPQ_Variable_0 dims [4] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     out  /model.11/Resize_output_0 exp ('value', [-4])
+     attr {'coordinate_transformation_mode': 'asymmetric', 'cubic_coeff_a': -0.75, 'mode': 'nearest', 'nearest_mode': 'floor', 'quant_type': 'S8'}
+ 68 RequantizeLinear PPQ_Operation_7
+     in   /model.10/act_1/Relu_output_0 exp ('value', [-4])
+     init PPQ_Variable_26 dims [] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     init PPQ_Variable_27 dims [] dtype 3 exp [0] doc layout ==> UNK rawlen 16
+     out  PPQ_Variable_25 exp ('value', [-3])
+     attr {'quant_type': 'S8'}
+ 69 Concat           /model.12/Concat
+     in   /model.11/Resize_output_0 exp ('value', [-4])
+     in   /model.6/cv2/act/Relu_output_0 exp ('value', [-4])
+     out  /model.12/Concat_output_0 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 70 Conv             /model.13/cv1/conv/Conv
+     in   /model.12/Concat_output_0 exp ('value', [-4])
+     init model.13.cv1.conv.weight dims [1, 1, 192, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 12288
+     init model.13.cv1.conv.bias dims [64] dtype 6 exp [-11] doc layout ==> UNK rawlen 256
+     out  /model.13/cv1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 71 Conv             /model.13/m.0/cv1/depthwise/Conv
+     in   /model.13/cv1/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_751 dims [3, 3, 64, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 576
+     init onnx::Conv_752 dims [64] dtype 6 exp [-10] doc layout ==> UNK rawlen 256
+     out  /model.13/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 64, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 72 Conv             /model.13/m.0/cv1/pointwise/Conv
+     in   /model.13/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_754 dims [1, 1, 64, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2048
+     init onnx::Conv_755 dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.13/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 73 Conv             /model.13/m.0/cv2/depthwise/Conv
+     in   /model.13/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_757 dims [3, 3, 32, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 288
+     init onnx::Conv_758 dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.13/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 74 Conv             /model.13/m.0/cv2/pointwise/Conv
+     in   /model.13/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_760 dims [1, 1, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1024
+     init onnx::Conv_761 dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.13/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 75 Conv             /model.13/cv2/conv/Conv
+     in   /model.13/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     init model.13.cv2.conv.weight dims [1, 1, 32, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 2048
+     init model.13.cv2.conv.bias dims [64] dtype 6 exp [-10] doc layout ==> UNK rawlen 256
+     out  /model.13/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 76 Resize           /model.14/Resize
+     in   /model.13/cv2/act/Relu_output_0 exp ('value', [-4])
+     in    exp None
+     init PPQ_Variable_1 dims [4] dtype 1 exp [0] doc layout ==> UNK rawlen 16
+     out  /model.14/Resize_output_0 exp ('value', [-4])
+     attr {'coordinate_transformation_mode': 'asymmetric', 'cubic_coeff_a': -0.75, 'mode': 'nearest', 'nearest_mode': 'floor', 'quant_type': 'S8'}
+ 77 Concat           /model.15/Concat
+     in   /model.14/Resize_output_0 exp ('value', [-4])
+     in   /model.4/cv2/act/Relu_output_0 exp ('value', [-4])
+     out  /model.15/Concat_output_0 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 78 Conv             /model.16/cv1/conv/Conv
+     in   /model.15/Concat_output_0 exp ('value', [-4])
+     init model.16.cv1.conv.weight dims [1, 1, 128, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 4096
+     init model.16.cv1.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.16/cv1/act/Relu_output_0 exp ('value', [-2])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 79 Conv             /model.16/m.0/cv1/depthwise/Conv
+     in   /model.16/cv1/act/Relu_output_0 exp ('value', [-2])
+     init onnx::Conv_763 dims [3, 3, 32, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 288
+     init onnx::Conv_764 dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.16/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 80 Conv             /model.16/m.0/cv1/pointwise/Conv
+     in   /model.16/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_766 dims [1, 1, 32, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 512
+     init onnx::Conv_767 dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.16/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 81 Conv             /model.16/m.0/cv2/depthwise/Conv
+     in   /model.16/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_769 dims [3, 3, 16, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 144
+     init onnx::Conv_770 dims [16] dtype 6 exp [-10] doc layout ==> UNK rawlen 64
+     out  /model.16/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 16, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 82 Conv             /model.16/m.0/cv2/pointwise/Conv
+     in   /model.16/m.0/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_772 dims [1, 1, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 256
+     init onnx::Conv_773 dims [16] dtype 6 exp [-10] doc layout ==> UNK rawlen 64
+     out  /model.16/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 83 Conv             /model.16/cv2/conv/Conv
+     in   /model.16/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     init model.16.cv2.conv.weight dims [1, 1, 16, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 512
+     init model.16.cv2.conv.bias dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.16/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 84 Conv             /model.17/depthwise/Conv
+     in   /model.16/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_775 dims [3, 3, 32, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 288
+     init onnx::Conv_776 dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.17/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [2, 2]}
+ 85 Conv             /model.23/cv2.0/cv2.0.0/depthwise/Conv
+     in   /model.16/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_811 dims [3, 3, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 288
+     init onnx::Conv_812 dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.23/cv2.0/cv2.0.0/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 86 Conv             /model.23/cv3.0/cv3.0.0/cv3.0.0.0/conv/Conv
+     in   /model.16/cv2/act/Relu_output_0 exp ('value', [-3])
+     init model.23.cv3.0.0.0.conv.weight dims [3, 3, 32, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 288
+     init model.23.cv3.0.0.0.conv.bias dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.0/cv3.0.0/cv3.0.0.0/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 87 Conv             /model.17/pointwise/Conv
+     in   /model.17/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_778 dims [1, 1, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1024
+     init onnx::Conv_779 dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.17/act_1/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 88 Conv             /model.23/cv2.0/cv2.0.0/pointwise/Conv
+     in   /model.23/cv2.0/cv2.0.0/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_814 dims [1, 1, 32, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 512
+     init onnx::Conv_815 dims [16] dtype 6 exp [-10] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.0/cv2.0.0/act_1/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 89 Conv             /model.23/cv3.0/cv3.0.0/cv3.0.0.1/conv/Conv
+     in   /model.23/cv3.0/cv3.0.0/cv3.0.0.0/act/Relu_output_0 exp ('value', [-4])
+     init model.23.cv3.0.0.1.conv.weight dims [1, 1, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1024
+     init model.23.cv3.0.0.1.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.0/cv3.0.0/cv3.0.0.1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 90 Concat           /model.18/Concat
+     in   /model.17/act_1/Relu_output_0 exp ('value', [-4])
+     in   /model.13/cv2/act/Relu_output_0 exp ('value', [-4])
+     out  /model.18/Concat_output_0 exp ('value', [-4])
+     attr {'axis': 3, 'quant_type': 'S8'}
+ 91 Conv             /model.23/cv2.0/cv2.0.1/depthwise/Conv
+     in   /model.23/cv2.0/cv2.0.0/act_1/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_817 dims [3, 3, 16, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 144
+     init onnx::Conv_818 dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.0/cv2.0.1/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 16, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 92 Conv             /model.23/cv3.0/cv3.0.1/cv3.0.1.0/conv/Conv
+     in   /model.23/cv3.0/cv3.0.0/cv3.0.0.1/act/Relu_output_0 exp ('value', [-3])
+     init model.23.cv3.0.1.0.conv.weight dims [3, 3, 32, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 288
+     init model.23.cv3.0.1.0.conv.bias dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.0/cv3.0.1/cv3.0.1.0/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 93 Conv             /model.19/cv1/conv/Conv
+     in   /model.18/Concat_output_0 exp ('value', [-4])
+     init model.19.cv1.conv.weight dims [1, 1, 96, 128] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 12288
+     init model.19.cv1.conv.bias dims [128] dtype 6 exp [-11] doc layout ==> UNK rawlen 512
+     out  /model.19/cv1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 94 Conv             /model.23/cv2.0/cv2.0.1/pointwise/Conv
+     in   /model.23/cv2.0/cv2.0.1/act/Relu_output_0 exp ('value', [-5])
+     init onnx::Conv_820 dims [1, 1, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 256
+     init onnx::Conv_821 dims [16] dtype 6 exp [-12] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.0/cv2.0.1/act_1/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 95 Conv             /model.23/cv3.0/cv3.0.1/cv3.0.1.1/conv/Conv
+     in   /model.23/cv3.0/cv3.0.1/cv3.0.1.0/act/Relu_output_0 exp ('value', [-4])
+     init model.23.cv3.0.1.1.conv.weight dims [1, 1, 32, 32] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1024
+     init model.23.cv3.0.1.1.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.0/cv3.0.1/cv3.0.1.1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 96 Conv             /model.19/m.0/cv1/depthwise/Conv
+     in   /model.19/cv1/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_781 dims [3, 3, 128, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1152
+     init onnx::Conv_782 dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.19/m.0/cv1/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+ 97 Conv             /model.23/cv2.0/cv2.0.2/Conv
+     in   /model.23/cv2.0/cv2.0.1/act_1/Relu_output_0 exp ('value', [-5])
+     init model.23.cv2.0.2.weight dims [1, 1, 16, 4] dtype 3 exp [-7] doc layout ==> (N/16)HWC16_UNALIGNED rawlen 64
+     init model.23.cv2.0.2.bias dims [4] dtype 6 exp [-12] doc layout ==> UNK rawlen 16
+     out  box0 exp ('out', [-4])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 98 Conv             /model.23/cv3.0/cv3.0.2/Conv
+     in   /model.23/cv3.0/cv3.0.1/cv3.0.1.1/act/Relu_output_0 exp ('value', [-4])
+     init model.23.cv3.0.2.weight dims [1, 1, 32, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16_UNALIGNED rawlen 32
+     init model.23.cv3.0.2.bias dims [1] dtype 6 exp [-11] doc layout ==> UNK rawlen 16
+     out  score0 exp ('out', [-2])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+ 99 Conv             /model.19/m.0/cv1/pointwise/Conv
+     in   /model.19/m.0/cv1/act/Relu_output_0 exp ('value', [-5])
+     init onnx::Conv_784 dims [1, 1, 128, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 8192
+     init onnx::Conv_785 dims [64] dtype 6 exp [-12] doc layout ==> UNK rawlen 256
+     out  /model.19/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+100 Conv             /model.19/m.0/cv2/depthwise/Conv
+     in   /model.19/m.0/cv1/act_1/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_787 dims [3, 3, 64, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 576
+     init onnx::Conv_788 dims [64] dtype 6 exp [-9] doc layout ==> UNK rawlen 256
+     out  /model.19/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 64, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+101 Conv             /model.19/m.0/cv2/pointwise/Conv
+     in   /model.19/m.0/cv2/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_790 dims [1, 1, 64, 64] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 4096
+     init onnx::Conv_791 dims [64] dtype 6 exp [-10] doc layout ==> UNK rawlen 256
+     out  /model.19/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+102 Conv             /model.19/cv2/conv/Conv
+     in   /model.19/m.0/cv2/act_1/Relu_output_0 exp ('value', [-3])
+     init model.19.cv2.conv.weight dims [1, 1, 64, 128] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 8192
+     init model.19.cv2.conv.bias dims [128] dtype 6 exp [-9] doc layout ==> UNK rawlen 512
+     out  /model.19/cv2/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+103 Conv             /model.20/depthwise/Conv
+     in   /model.19/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_793 dims [3, 3, 128, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 1152
+     init onnx::Conv_794 dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.20/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [2, 2]}
+104 Conv             /model.23/cv2.1/cv2.1.0/depthwise/Conv
+     in   /model.19/cv2/act/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_823 dims [3, 3, 128, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1152
+     init onnx::Conv_824 dims [128] dtype 6 exp [-9] doc layout ==> UNK rawlen 512
+     out  /model.23/cv2.1/cv2.1.0/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+105 Conv             /model.23/cv3.1/cv3.1.0/cv3.1.0.0/conv/Conv
+     in   /model.19/cv2/act/Relu_output_0 exp ('value', [-3])
+     init model.23.cv3.1.0.0.conv.weight dims [3, 3, 128, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1152
+     init model.23.cv3.1.0.0.conv.bias dims [128] dtype 6 exp [-9] doc layout ==> UNK rawlen 512
+     out  /model.23/cv3.1/cv3.1.0/cv3.1.0.0/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+106 Conv             /model.20/pointwise/Conv
+     in   /model.20/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_796 dims [1, 1, 128, 64] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 8192
+     init onnx::Conv_797 dims [64] dtype 6 exp [-11] doc layout ==> UNK rawlen 256
+     out  /model.20/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+107 Conv             /model.23/cv2.1/cv2.1.0/pointwise/Conv
+     in   /model.23/cv2.1/cv2.1.0/act/Relu_output_0 exp ('value', [-5])
+     init onnx::Conv_826 dims [1, 1, 128, 16] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 2048
+     init onnx::Conv_827 dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.1/cv2.1.0/act_1/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+108 Conv             /model.23/cv3.1/cv3.1.0/cv3.1.0.1/conv/Conv
+     in   /model.23/cv3.1/cv3.1.0/cv3.1.0.0/act/Relu_output_0 exp ('value', [-4])
+     init model.23.cv3.1.0.1.conv.weight dims [1, 1, 128, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 4096
+     init model.23.cv3.1.0.1.conv.bias dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.1/cv3.1.0/cv3.1.0.1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+109 Concat           /model.21/Concat
+     in   /model.20/act_1/Relu_output_0 exp ('value', [-3])
+     in   PPQ_Variable_25 exp ('value', [-3])
+     out  /model.21/Concat_output_0 exp ('value', [-3])
+     attr {'axis': 3, 'quant_type': 'S8'}
+110 Conv             /model.23/cv2.1/cv2.1.1/depthwise/Conv
+     in   /model.23/cv2.1/cv2.1.0/act_1/Relu_output_0 exp ('value', [-3])
+     init onnx::Conv_829 dims [3, 3, 16, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 144
+     init onnx::Conv_830 dims [16] dtype 6 exp [-9] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.1/cv2.1.1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 16, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+111 Conv             /model.23/cv3.1/cv3.1.1/cv3.1.1.0/conv/Conv
+     in   /model.23/cv3.1/cv3.1.0/cv3.1.0.1/act/Relu_output_0 exp ('value', [-3])
+     init model.23.cv3.1.1.0.conv.weight dims [3, 3, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 288
+     init model.23.cv3.1.1.0.conv.bias dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.1/cv3.1.1/cv3.1.1.0/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+112 Conv             /model.22/cv1/conv/Conv
+     in   /model.21/Concat_output_0 exp ('value', [-3])
+     init model.22.cv1.conv.weight dims [1, 1, 192, 128] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 24576
+     init model.22.cv1.conv.bias dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.22/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+113 Conv             /model.23/cv2.1/cv2.1.1/pointwise/Conv
+     in   /model.23/cv2.1/cv2.1.1/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_832 dims [1, 1, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 256
+     init onnx::Conv_833 dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.1/cv2.1.1/act_1/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+114 Conv             /model.23/cv3.1/cv3.1.1/cv3.1.1.1/conv/Conv
+     in   /model.23/cv3.1/cv3.1.1/cv3.1.1.0/act/Relu_output_0 exp ('value', [-4])
+     init model.23.cv3.1.1.1.conv.weight dims [1, 1, 32, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1024
+     init model.23.cv3.1.1.1.conv.bias dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.1/cv3.1.1/cv3.1.1.1/act/Relu_output_0 exp ('value', [-2])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+115 Conv             /model.22/m.0/cv1/depthwise/Conv
+     in   /model.22/cv1/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_799 dims [3, 3, 128, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1152
+     init onnx::Conv_800 dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.22/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+116 Conv             /model.23/cv2.1/cv2.1.2/Conv
+     in   /model.23/cv2.1/cv2.1.1/act_1/Relu_output_0 exp ('value', [-5])
+     init model.23.cv2.1.2.weight dims [1, 1, 16, 4] dtype 3 exp [-7] doc layout ==> (N/16)HWC16_UNALIGNED rawlen 64
+     init model.23.cv2.1.2.bias dims [4] dtype 6 exp [-12] doc layout ==> UNK rawlen 16
+     out  box1 exp ('out', [-4])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+117 Conv             /model.23/cv3.1/cv3.1.2/Conv
+     in   /model.23/cv3.1/cv3.1.1/cv3.1.1.1/act/Relu_output_0 exp ('value', [-2])
+     init model.23.cv3.1.2.weight dims [1, 1, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16_UNALIGNED rawlen 32
+     init model.23.cv3.1.2.bias dims [1] dtype 6 exp [-8] doc layout ==> UNK rawlen 16
+     out  score1 exp ('out', [-1])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+118 Conv             /model.22/m.0/cv1/pointwise/Conv
+     in   /model.22/m.0/cv1/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_802 dims [1, 1, 128, 64] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 8192
+     init onnx::Conv_803 dims [64] dtype 6 exp [-10] doc layout ==> UNK rawlen 256
+     out  /model.22/m.0/cv1/act_1/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+119 Conv             /model.22/m.0/cv2/depthwise/Conv
+     in   /model.22/m.0/cv1/act_1/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_805 dims [3, 3, 64, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 576
+     init onnx::Conv_806 dims [64] dtype 6 exp [-10] doc layout ==> UNK rawlen 256
+     out  /model.22/m.0/cv2/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 64, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+120 Conv             /model.22/m.0/cv2/pointwise/Conv
+     in   /model.22/m.0/cv2/act/Relu_output_0 exp ('value', [-5])
+     init onnx::Conv_808 dims [1, 1, 64, 64] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 4096
+     init onnx::Conv_809 dims [64] dtype 6 exp [-11] doc layout ==> UNK rawlen 256
+     out  /model.22/m.0/cv2/act_1/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+121 Conv             /model.22/cv2/conv/Conv
+     in   /model.22/m.0/cv2/act_1/Relu_output_0 exp ('value', [-4])
+     init model.22.cv2.conv.weight dims [1, 1, 64, 128] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 8192
+     init model.22.cv2.conv.bias dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.22/cv2/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+122 Conv             /model.23/cv2.2/cv2.2.0/depthwise/Conv
+     in   /model.22/cv2/act/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_835 dims [3, 3, 128, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1152
+     init onnx::Conv_836 dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.23/cv2.2/cv2.2.0/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+123 Conv             /model.23/cv3.2/cv3.2.0/cv3.2.0.0/conv/Conv
+     in   /model.22/cv2/act/Relu_output_0 exp ('value', [-4])
+     init model.23.cv3.2.0.0.conv.weight dims [3, 3, 128, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1152
+     init model.23.cv3.2.0.0.conv.bias dims [128] dtype 6 exp [-10] doc layout ==> UNK rawlen 512
+     out  /model.23/cv3.2/cv3.2.0/cv3.2.0.0/act/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 128, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+124 Conv             /model.23/cv2.2/cv2.2.0/pointwise/Conv
+     in   /model.23/cv2.2/cv2.2.0/act/Relu_output_0 exp ('value', [-5])
+     init onnx::Conv_838 dims [1, 1, 128, 16] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 2048
+     init onnx::Conv_839 dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.2/cv2.2.0/act_1/Relu_output_0 exp ('value', [-4])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+125 Conv             /model.23/cv3.2/cv3.2.0/cv3.2.0.1/conv/Conv
+     in   /model.23/cv3.2/cv3.2.0/cv3.2.0.0/act/Relu_output_0 exp ('value', [-4])
+     init model.23.cv3.2.0.1.conv.weight dims [1, 1, 128, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 4096
+     init model.23.cv3.2.0.1.conv.bias dims [32] dtype 6 exp [-10] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.2/cv3.2.0/cv3.2.0.1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+126 Conv             /model.23/cv2.2/cv2.2.1/depthwise/Conv
+     in   /model.23/cv2.2/cv2.2.0/act_1/Relu_output_0 exp ('value', [-4])
+     init onnx::Conv_841 dims [3, 3, 16, 1] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 144
+     init onnx::Conv_842 dims [16] dtype 6 exp [-11] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.2/cv2.2.1/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 16, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+127 Conv             /model.23/cv3.2/cv3.2.1/cv3.2.1.0/conv/Conv
+     in   /model.23/cv3.2/cv3.2.0/cv3.2.0.1/act/Relu_output_0 exp ('value', [-3])
+     init model.23.cv3.2.1.0.conv.weight dims [3, 3, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 288
+     init model.23.cv3.2.1.0.conv.bias dims [32] dtype 6 exp [-9] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.2/cv3.2.1/cv3.2.1.0/act/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 32, 'kernel_shape': [3, 3], 'pads': [1, 1, 1, 1], 'quant_type': 'S8', 'strides': [1, 1]}
+128 Conv             /model.23/cv2.2/cv2.2.1/pointwise/Conv
+     in   /model.23/cv2.2/cv2.2.1/act/Relu_output_0 exp ('value', [-5])
+     init onnx::Conv_844 dims [1, 1, 16, 16] dtype 3 exp [-7] doc layout ==> (N/16)HWC16 rawlen 256
+     init onnx::Conv_845 dims [16] dtype 6 exp [-12] doc layout ==> UNK rawlen 64
+     out  /model.23/cv2.2/cv2.2.1/act_1/Relu_output_0 exp ('value', [-5])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+129 Conv             /model.23/cv3.2/cv3.2.1/cv3.2.1.1/conv/Conv
+     in   /model.23/cv3.2/cv3.2.1/cv3.2.1.0/act/Relu_output_0 exp ('value', [-5])
+     init model.23.cv3.2.1.1.conv.weight dims [1, 1, 32, 32] dtype 3 exp [-6] doc layout ==> (N/16)HWC16 rawlen 1024
+     init model.23.cv3.2.1.1.conv.bias dims [32] dtype 6 exp [-11] doc layout ==> UNK rawlen 128
+     out  /model.23/cv3.2/cv3.2.1/cv3.2.1.1/act/Relu_output_0 exp ('value', [-3])
+     attr {'activation': 'Relu', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+130 Conv             /model.23/cv2.2/cv2.2.2/Conv
+     in   /model.23/cv2.2/cv2.2.1/act_1/Relu_output_0 exp ('value', [-5])
+     init model.23.cv2.2.2.weight dims [1, 1, 16, 4] dtype 3 exp [-7] doc layout ==> (N/16)HWC16_UNALIGNED rawlen 64
+     init model.23.cv2.2.2.bias dims [4] dtype 6 exp [-12] doc layout ==> UNK rawlen 16
+     out  box2 exp ('out', [-4])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}
+131 Conv             /model.23/cv3.2/cv3.2.2/Conv
+     in   /model.23/cv3.2/cv3.2.1/cv3.2.1.1/act/Relu_output_0 exp ('value', [-3])
+     init model.23.cv3.2.2.weight dims [1, 1, 32, 1] dtype 3 exp [-6] doc layout ==> (N/16)HWC16_UNALIGNED rawlen 32
+     init model.23.cv3.2.2.bias dims [1] dtype 6 exp [-9] doc layout ==> UNK rawlen 16
+     out  score2 exp ('out', [-1])
+     attr {'activation': 'Linear', 'dilations': [1, 1], 'group': 1, 'kernel_shape': [1, 1], 'pads': [0, 0, 0, 0], 'quant_type': 'S8', 'strides': [1, 1]}

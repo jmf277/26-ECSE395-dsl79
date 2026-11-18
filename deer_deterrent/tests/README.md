@@ -25,6 +25,7 @@ Full chronology, partial-recording caveats and earlier numeric results are prese
 ## Recorded recognition trials and replay
 
 - [Recorded recognition trials](recognition/README.md): the recognition trial program's sessions of November 4, each with its pictures, exact model inputs, records and gallery, and the three flash images that made them.
+- [Analysis of the recorded recognition trials](recognition_analysis/README.md): the trial program's model run on a computer on those sessions' saved model inputs, checked against the board's records of them, and on edited copies and other pictures, with the scripts and their results.
 - [Replay of the detector records](replay_verification/README.md): the saved detector sessions under `captures` replayed through the growth gate's own source.
 
 ## Power and outdoor evidence status

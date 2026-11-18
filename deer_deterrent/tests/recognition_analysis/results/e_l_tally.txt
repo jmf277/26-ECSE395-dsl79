@@ -1,0 +1,30 @@
+68 frames; all model hash same: True
+D1 5in n 10 frames with any box 10 | frames with a light box 10 | frames with a non-light box 0 | top box on light 10 other 0 | best light 0.321 best non-light 0.0 | score min,max 0.148 0.321
+D2 n 10 frames with any box 5 | frames with a light box 5 | frames with a non-light box 0 | top box on light 5 other 0 | best light 0.119 best non-light 0.0 | score min,max 0 0.119
+D3 n 10 frames with any box 2 | frames with a light box 0 | frames with a non-light box 2 | top box on light 0 other 2 | best light 0.0 best non-light 0.095 | score min,max 0 0.095
+    non-light boxes: [(21, 0.095, [138, 34, 185, 88]), (22, 0.095, [140, 35, 187, 92])]
+N1 dog n 10 frames with any box 1 | frames with a light box 1 | frames with a non-light box 0 | top box on light 1 other 0 | best light 0.095 best non-light 0.0 | score min,max 0 0.095
+D1 2.5in n 10 frames with any box 0 | frames with a light box 0 | frames with a non-light box 0 | top box on light 0 other 0 | best light 0.0 best non-light 0.0 | score min,max 0 0
+empty before n 6 frames with any box 6 | frames with a light box 6 | frames with a non-light box 0 | top box on light 6 other 0 | best light 0.5 best non-light 0.0 | score min,max 0.5 0.5
+D1 cont n 6 frames with any box 5 | frames with a light box 3 | frames with a non-light box 4 | top box on light 2 other 3 | best light 0.119 best non-light 0.148 | score min,max 0 0.148
+    non-light boxes: [(58, 0.119, [159, 92, 225, 143]), (58, 0.095, [170, 102, 227, 142]), (58, 0.095, [146, 99, 229, 171]), (58, 0.095, [159, 104, 223, 151]), (60, 0.095, [169, 101, 227, 142]), (61, 0.095, [169, 101, 227, 141]), (62, 0.148, [168, 101, 226, 141]), (62, 0.119, [160, 92, 225, 142]), (62, 0.095, [160, 104, 222, 146])]
+empty after n 6 frames with any box 6 | frames with a light box 6 | frames with a non-light box 0 | top box on light 6 other 0 | best light 0.5 best non-light 0.0 | score min,max 0.438 0.5
+deer frames 46 non-deer frames 22 share of deer/non-deer frame pairs in which the deer frame scores higher, ties counted half (AUC) 0.321
+same, ignoring boxes on the light: AUC (ties counted half) 0.565 ; deer frames with a non-light box 6 of 46 ; non-deer 0 of 22
+two-of-three replay (first confirming frame within trial, frames in confirmed state)
+0.85 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (None, 0)}
+0.6 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (None, 0)}
+0.5 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 10)}
+0.45 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 10)}
+0.43 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 11)}
+0.4 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 11)}
+0.35 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 11)}
+0.3 {1: (None, 0), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 11)}
+0.25 {1: (5, 3), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 11)}
+0.2 {1: (2, 7), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 11)}
+0.15 {1: (2, 9), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 11)}
+0.14 {1: (2, 9), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 12)}
+0.11 {1: (2, 9), 2: (None, 0), 3: (None, 0), 4: (None, 0), 5: (None, 0), 6: (2, 17)}
+0.09 {1: (2, 9), 2: (2, 4), 3: (2, 2), 4: (None, 0), 5: (None, 0), 6: (2, 17)}
+box sizes (camera px, then in model-input px) of all 68 frames: width,height
+58 boxes; width camera px min/med/max 40 54.0 83 height 21 27.0 72 ; model px width 28 38 58

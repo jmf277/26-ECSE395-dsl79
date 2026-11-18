@@ -1,0 +1,4 @@
+D1 dim (s08 crop) runs 1512 percentiles 10,25,50,75,90,100 of score on the print: [0.023, 0.047, 0.095, 0.148, 0.182, 0.378] share>=0.3 0.011 share>=0.0953 0.522
+D1 lit (f6 crop) runs 1512 percentiles 10,25,50,75,90,100 of score on the print: [0.119, 0.182, 0.269, 0.321, 0.378, 0.5] share>=0.3 0.383 share>=0.0953 0.945
+D2 unlit (phone) runs 1512 percentiles 10,25,50,75,90,100 of score on the print: [0.014, 0.029, 0.076, 0.148, 0.223, 0.378] share>=0.3 0.028 share>=0.0953 0.457
+dog lit (f32 crop) runs 1512 percentiles 10,25,50,75,90,100 of score on the print: [0.037, 0.076, 0.148, 0.269, 0.321, 0.438] share>=0.3 0.155 share>=0.0953 0.72

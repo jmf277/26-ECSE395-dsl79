@@ -1,0 +1,122 @@
+68 frames; keys sample ['acquired_us', 'alarm_started', 'armed', 'boot', 'box_coordinates', 'boxes', 'camera_height', 'camera_width', 'capture_lighting_ok', 'capture_us', 'committed', 'decode_us', 'discarded_frames_required', 'error', 'frame', 'inferred_us', 'input_bytes', 'input_copy_us', 'input_dtype', 'input_exponent', 'input_layout', 'input_scaling', 'input_shape', 'jpeg_bytes', 'light_settle_ms', 'lighting', 'model_sha256', 'model_us', 'postprocessing_us', 'preprocessing_us', 'present', 'required', 'schema', 'score', 'started_us', 'threshold', 'trial', 'trigger', 'valid', 'window']
+frame numbers in file 1 68 trials [1, 2, 3, 4, 5, 6] triggers ['manual', 'pir']
+
+level | first confirming frame per trial using each frame's score (all boxes)
+0.85 {}
+0.6 {}
+0.55 {}
+0.51 {}
+0.5 {6: (52, 10)}
+0.45 {6: (52, 10)}
+0.44 {6: (52, 10)}
+0.43 {6: (52, 11)}
+0.4 {6: (52, 11)}
+0.38 {6: (52, 11)}
+0.35 {6: (52, 11)}
+0.33 {6: (52, 11)}
+0.32 {6: (52, 11)}
+0.3 {6: (52, 11)}
+0.27 {6: (52, 11)}
+0.26 {1: (5, 3), 6: (52, 11)}
+0.25 {1: (5, 3), 6: (52, 11)}
+0.22 {1: (2, 7), 6: (52, 11)}
+0.2 {1: (2, 7), 6: (52, 11)}
+0.18 {1: (2, 9), 6: (52, 11)}
+0.15 {1: (2, 9), 6: (52, 11)}
+0.14 {1: (2, 9), 6: (52, 12)}
+0.12 {1: (2, 9), 6: (52, 12)}
+0.11 {1: (2, 9), 6: (52, 17)}
+0.1 {1: (2, 9), 6: (52, 17)}
+0.09 {1: (2, 9), 2: (12, 4), 3: (22, 2), 6: (52, 17)}
+
+level | same, counting ONLY boxes NOT on the light (deer-located boxes)
+0.85 {}
+0.6 {}
+0.55 {}
+0.51 {}
+0.5 {}
+0.45 {}
+0.44 {}
+0.43 {}
+0.4 {}
+0.38 {}
+0.35 {}
+0.33 {}
+0.32 {}
+0.3 {}
+0.27 {}
+0.26 {}
+0.25 {}
+0.22 {}
+0.2 {}
+0.18 {}
+0.15 {}
+0.14 {}
+0.12 {}
+0.11 {}
+0.1 {}
+0.09 {3: (22, [22, 23]), 6: (60, [60, 61, 62, 63])}
+
+level | same, counting ONLY light boxes
+0.85 {}
+0.6 {}
+0.55 {}
+0.51 {}
+0.5 {6: (52, 10)}
+0.45 {6: (52, 10)}
+0.44 {6: (52, 10)}
+0.43 {6: (52, 11)}
+0.4 {6: (52, 11)}
+0.38 {6: (52, 11)}
+0.35 {6: (52, 11)}
+0.33 {6: (52, 11)}
+0.32 {6: (52, 11)}
+0.3 {6: (52, 11)}
+0.27 {6: (52, 11)}
+0.26 {1: (5, 3), 6: (52, 11)}
+0.25 {1: (5, 3), 6: (52, 11)}
+0.22 {1: (2, 7), 6: (52, 11)}
+0.2 {1: (2, 7), 6: (52, 11)}
+0.18 {1: (2, 9), 6: (52, 11)}
+0.15 {1: (2, 9), 6: (52, 11)}
+0.14 {1: (2, 9), 6: (52, 11)}
+0.12 {1: (2, 9), 6: (52, 11)}
+0.11 {1: (2, 9), 6: (52, 13)}
+0.1 {1: (2, 9), 6: (52, 13)}
+0.09 {1: (2, 9), 2: (12, 4), 6: (52, 15)}
+
+trial 6 replay split by phase as if each phase were its own window (D1 phase only):
+0.85 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.6 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.55 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.51 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.5 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.45 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.44 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.43 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.4 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.38 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.35 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.33 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.32 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.3 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.27 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.26 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.25 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.22 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.2 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.18 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.15 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.14 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.12 D1 phase all boxes (None, []) | D1 phase deer-located boxes (None, [])
+0.11 D1 phase all boxes (59, [59, 60, 61, 62]) | D1 phase deer-located boxes (None, [])
+0.1 D1 phase all boxes (59, [59, 60, 61, 62]) | D1 phase deer-located boxes (None, [])
+0.09 D1 phase all boxes (59, [59, 60, 61, 62]) | D1 phase deer-located boxes (60, [60, 61, 62])
+
+frames with non-light boxes: [(21, 't3 D3', [(0.0953, [138, 34, 185, 88])]), (22, 't3 D3', [(0.0953, [140, 35, 187, 92])]), (58, 't6 D1', [(0.1192, [159, 92, 225, 143]), (0.0953, [170, 102, 227, 142]), (0.0953, [146, 99, 229, 171]), (0.0953, [159, 104, 223, 151])]), (60, 't6 D1', [(0.0953, [169, 101, 227, 142])]), (61, 't6 D1', [(0.0953, [169, 101, 227, 141])]), (62, 't6 D1', [(0.148, [168, 101, 226, 141]), (0.1192, [160, 92, 225, 142]), (0.0953, [160, 104, 222, 146])])]
+
+all boxes: strict P(deer>non), ties, P+ties/2 (0.21047430830039526, 0.22035573122529645, 0.32065217391304346) n 46 22
+light ignored: strict, ties, P+ties/2 (0.13043478260869565, 0.8695652173913043, 0.5652173913043478) deer frames with non-light box 6 non-deer 0
+board flags: present any False alarm_started any False thresholds {0.850000023841858} window {3} required {2}
+max score armed 0.32082128524780273 max score 0.5 best box on deer 0.14804720878601074
+k on boxes in main session [-9, -8, -7, -6, -5, -4, -3, -1, 0]

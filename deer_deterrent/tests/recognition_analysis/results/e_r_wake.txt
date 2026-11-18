@@ -1,0 +1,10 @@
+head 2 start 0 pass 0 best logit -12.5 prob 4e-06
+head 2 start 0 pass 1 best logit -12.5 prob 4e-06
+head 2 start 1 pass 0 best logit -13.0 prob 2e-06
+head 2 start 1 pass 1 best logit -13.0 prob 2e-06
+head 2 best logit found -12.5 prob 4e-06
+head 1 start 0 pass 0 best logit -5.5 prob 0.00407
+head 1 start 0 pass 1 best logit -4.0 prob 0.017986
+head 1 start 1 pass 0 best logit -6.5 prob 0.001501
+head 1 start 1 pass 1 best logit -6.5 prob 0.001501
+head 1 best logit found -4.0 prob 0.017986

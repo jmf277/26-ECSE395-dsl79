@@ -1,0 +1,112 @@
+# Analysis of the recorded recognition trials
+
+This folder holds the analysis of the [recorded recognition trials of November 4, 2026](../recognition/README.md). Its Python scripts read the trial program's model file, [deer.espdl](../../experiments/deer-classifier/model/deer.espdl), from its own bytes and run it on a computer in integer arithmetic, written from the kernels of ESP-DL 3.3.14, the version the trial program builds with. That reader is checked first against the board's own records of the trials. The experiments then run it on the 74 saved model inputs and on edited copies of them (the ceiling light painted out, the picture flipped), on the prints cropped from the saved JPEGs and shrunk and moved over plain fields, on plain shapes drawn on plain fields, on the 175 camera photos saved in [../captures](../captures/) and on a phone photograph of the D2 print. Every model response here is computed on a computer; none is a run on the board. The other results are arithmetic on the board's own records: the boxes' sizes and where they sit, the two-of-three rule replayed over the recorded scores, and the board run of October 29 recomputed from its saved results.
+
+## The check against the board's records
+
+`compare_board.py` runs the model on each of the 74 saved model inputs (`../recognition/*/*.input.i8`: the 68 frames of the main session and one frame each of set-up sessions 04 to 08 and of the practice session), decodes its boxes as the board's post-processing does (a floor of 0.10, which, rounded to the model's score steps, keeps scores from 0.0953 on the finest layer and from 0.1192 on the other two; overlap 0.70; at most 10 boxes; the 320 × 240 picture letterboxed into the 224 × 224 input) and compares each frame's score and boxes with the frame's own record. All 74 scores agree within 1e-6 and all 69 recorded boxes agree to the pixel. The script itself prints 71 of 74 full box-list matches because it compares scores rounded to six decimals: in three frames (main-session frames 64 and 67, set-up session 08) the board's value, computed in single precision, is 0.4378235042 and rounds to 0.437824, while the computer's, in double precision, is 0.4378234991 and rounds to 0.437823. `compare_board_exact.py` compares with a tolerance of 1e-6 and finds 74 of 74 frames with identical box lists, all 69 boxes from the finest of the model's three detection layers; a second decode it carries, written in single precision against ESP-DL's post-processing source, gives the same pixels, its scores differing from the records in the eighth decimal in 11 frames. Run with the accumulator held to 20 bits (`compare_board.py ... sat`), the result is the same. 34 of the 74 frames have no box, so the 69 boxes, each a score and four coordinates, are the real test. The board recorded nothing inside the model, so the agreement is at its outputs.
+
+## Rerun
+
+From this folder, with Python 3, numpy and Pillow (`python -m pip install numpy pillow`). The results here were made that way on a copy of the repository, with Python 3.14.7, numpy 2.5.3 and Pillow 12.3.0. Every script reads the model, the recorded sessions, the detector photos and `inputs/` by paths relative to this folder and writes into `results/`. Each run's printed output is kept as `results/<script>.txt`, except that `dump_model.py`'s is `results/model_graph.txt`, `compare_board.py`'s two runs are `results/compare_board_plain.txt` and `results/compare_board_sat.txt`, and the four scripts that print only picture sizes (`sheet.py`, `sheet2.py`, `rectify_d2.py`, `patches.py`) keep none. Run them in this order, since `e_h_clean.py` reads what `rectify_d2.py` writes, `e_n_sweep.py` and `prediction_sweep.py` read what `e_h_clean.py` writes, and `e_q_misc.py` reads what `compare_board.py` writes:
+
+```sh
+python walk1.py ../../experiments/deer-classifier/model/deer.espdl > results/walk1.txt
+python walk2.py ../../experiments/deer-classifier/model/deer.espdl > results/walk2.txt
+python dump_model.py ../../experiments/deer-classifier/model/deer.espdl > results/model_graph.txt
+python compare_board.py ../../experiments/deer-classifier/model/deer.espdl ../recognition > results/compare_board_plain.txt
+python compare_board.py ../../experiments/deer-classifier/model/deer.espdl ../recognition sat > results/compare_board_sat.txt
+python compare_board_exact.py ../../experiments/deer-classifier/model/deer.espdl ../recognition > results/compare_board_exact.txt
+python recompute_oct29.py > results/recompute_oct29.txt
+python sheet.py results/s1.png 1,6,11,18,22,32,41,50
+python sheet.py results/s2.png 51,54,56,57,58,60,62,63,64,66,67,68
+python sheet2.py results/s3.png
+python e_a_heads.py > results/e_a_heads.txt
+python e_b_heat.py > results/e_b_heat.txt
+python e_c_synth.py > results/e_c_synth.txt
+python e_d_preproc.py > results/e_d_preproc.txt
+python e_e_lamp.py > results/e_e_lamp.txt
+python e_f_scale.py > results/e_f_scale.txt
+python e_g_float.py > results/e_g_float.txt
+python rectify_d2.py
+python e_h_clean.py > results/e_h_clean.txt
+python e_j_captures.py > results/e_j_captures.txt
+python e_k_polarity.py > results/e_k_polarity.txt
+python e_l_tally.py > results/e_l_tally.txt
+python e_m_weights.py > results/e_m_weights.txt
+python e_n_sweep.py > results/e_n_sweep.txt
+python e_o_occl.py > results/e_o_occl.txt
+python e_p_transplant.py > results/e_p_transplant.txt
+python e_q_misc.py > results/e_q_misc.txt
+python e_r_wake.py > results/e_r_wake.txt
+python patches.py
+python ellipse_placements.py > results/ellipse_placements.txt
+python prediction_setup08.py > results/prediction_setup08.txt
+python prediction_sweep.py > results/prediction_sweep.txt
+python replay_two_of_three.py > results/replay_two_of_three.txt
+python preproc_boxes.py > results/preproc_boxes.txt
+```
+
+One model run takes about 0.04 s here, and the whole list above took about 24 minutes: most scripts take seconds, `e_k_polarity.py` half a minute, `e_o_occl.py`, `e_r_wake.py` and `prediction_sweep.py` two to five minutes each, and `e_n_sweep.py`, with 16,800 model runs, about 11 minutes. `e_m_weights.py` and `e_r_wake.py` draw their random numbers from a fixed seed.
+
+In the outputs D1, D2 and D3 are the three deer prints and N1 the dog print; `f6` is frame 6 of the main session `p3-demo-20261104-02`, `s07` and `s08` set-up sessions 07 and 08, and the practice frame is that of `d1-practice-20261104-01`. Distances are from lens to print. Widths are in model pixels, those of the 224 × 224 input, unless camera pixels, those of the 320 × 240 picture, are named; one model pixel is 10/7 camera pixels. "Raw" and "logit" are the model's output before the sigmoid, and a score is its sigmoid. In `e_e_lamp.py` and `lamp_crop.png`, "lamp" is the round ceiling light.
+
+## Scripts and results
+
+| Script | What it does | Results in `results/` |
+|---|---|---|
+| `fbs.py` | Reads the `.espdl` container from its bytes, read only: its header, tables, vectors, strings and numbers | (used by the others) |
+| `walk1.py` | The file's header and top-level tables: the magic `EDL2`, its length (499,712 bytes) and the lengths of the graph's lists (132 steps, 223 stored tensors, 1 input, 6 outputs, 136 value records, and the two lists of test vectors, empty) | `walk1.txt` |
+| `walk2.py` | The first step and its attributes, the input and the six outputs, and the steps by kind: 132 steps of 7 kinds (101 convolutions, 10 Concat, 8 RequantizeLinear, 5 Add, 3 Split, 3 MaxPool, 2 Resize) | `walk2.txt` |
+| `dump_model.py` | The whole graph by ESP-DL 3.3.14's schema, `espdl.fbs`: every step with its inputs, outputs, exponents and attributes, and every stored tensor with its shape and exponent; the file holds no test vectors | `model_graph.txt` |
+| `interp.py` | Runs the graph on an 8-bit input in integer arithmetic written from ESP-DL 3.3.14's kernel source (power-of-two scaling per tensor, rounding half up, saturation to 8 bits, ReLU), and decodes the boxes as the board's post-processing does | (used by the others) |
+| `exp_util.py` | Shared by the experiments: the paths, a frame's saved input and record, the model run, its boxes and score, each layer's highest response, and a copy of the firmware's resize, letterbox and scaling of a camera picture | (used by the others) |
+| `compare_board.py` | The check against the board's records (above); with `sat`, the accumulator held to 20 bits | `compare_board_plain.json`, `compare_board_plain.txt`, `compare_board_sat.json`, `compare_board_sat.txt` |
+| `compare_board_exact.py` | The same check with a tolerance on the score, boxes counted by layer, the model hash of every record, a second decode in single precision, and the time of one model run | `compare_board_exact.txt` |
+| `recompute_oct29.py` | The board run of October 29 recomputed from its saved results in [test-results](../../experiments/deer-classifier/test-results/): the two 33-frame looks (highest 0.3775 at frames 282 and 283, mean 0.216; highest 0.2227 at frame 431, mean 0.083), the log's 126 complete and 129 readable frame lines, the mean stage times (`infer_ms` 379.129 and 378.889 ms), the ladder of scores, and the two-of-three rule replayed at each level | `recompute_oct29.txt` |
+| `sheet.py` | Main-session frames with each record's boxes drawn on, the top box green | `s1.png` (frames 1, 6, 11, 18, 22, 32, 41, 50), `s2.png` (twelve frames of trial 6) |
+| `sheet2.py` | The same for set-up sessions 04 to 08 and the practice frame | `s3.png` |
+| `e_a_heads.py` | For each of the 74 saved inputs, the highest response of each of the three detection layers and the layer, cell and box of the top score | `e_a_heads.json`, `e_a_heads.txt` |
+| `e_b_heat.py` | Ten frames with the finest layer's response laid over the model input as a heat map, boxes drawn, and the response's local highs | `heat.png`, `e_b_heat.txt` |
+| `e_c_synth.py` | Plain ellipses on plain fields: size, edge, contrast, bright on dark and dark on bright, shape and color at the center of the picture, and position at seven places; plain fields; the board's all-114 self-test picture | `e_c_synth.json`, `e_c_synth.txt` |
+| `e_d_preproc.py` | Eight frames' saved inputs against their JPEGs prepared four ways (bands, color order, resize), and the score of every main-session frame under another decode or resize, with the colors swapped, in gray and flipped top to bottom | `e_d_preproc.json`, `e_d_preproc.txt` |
+| `e_e_lamp.py` | The ceiling light painted out of all 68 main-session frames; its crop from frame 56 scaled, moved about the empty room, flipped, put on a print frame and on plain fields | `e_e_lamp.json`, `lamp_crop.png`, `e_e_lamp.txt` |
+| `e_f_scale.py` | Each print as the camera saw it, cropped from the saved JPEG, shrunk to widths of 16 to 200 model pixels and centered on three plain fields: the best score on the print at each width | `e_f_scale.json`, `scale.png`, `e_f_scale.txt` |
+| `e_g_float_lib.py` | The graph run in decimal arithmetic with the stored weights, for `e_m_weights.py` | (used by `e_m_weights.py`) |
+| `e_g_float.py` | The stored, rounded weights with every layer's output kept in decimal arithmetic, without the rounding and saturation between layers, against the 8-bit run on the 68 main-session frames; the score layers' biases | `e_g_float.json`, `e_g_float.txt` |
+| `rectify_d2.py` | Straightens the D2 print out of the phone photograph `inputs/IMG_6710.png` | `d2_rectified.png` |
+| `e_h_clean.py` | The unlit D2 print at every size on plain fields through a camera-like path (a 320 × 240 picture, JPEG, a copy of the firmware's resize); with an imitation of the capture light, tinted, and lower in the picture | `d2_clean.png`, `d2_lit.png`, `e_h_clean.json`, `e_h_clean.txt` |
+| `e_j_captures.py` | The 175 camera photos in `../captures`, none with a deer, through the model: a negative control | `e_j_captures.json`, `captures_top.png` (the twelve highest), `e_j_captures.txt` |
+| `e_k_polarity.py` | Bright blobs on dark fields against dark blobs on bright fields, at 90 sizes and placements each | `e_k_polarity.txt` |
+| `e_l_tally.py` | The main session's 68 frame records by trial: where their boxes sit, on the ceiling light or elsewhere, the share of deer and non-deer frame pairs in which the deer frame scores higher (ties counted half), the two-of-three rule replayed by level, and the boxes' sizes | `e_l_tally.txt` |
+| `e_m_weights.py` | The weights' statistics and the parameter count (353,855), and how far noise the size of the weights' rounding moves the response | `e_m_weights.txt` |
+| `e_n_sweep.py` | 16,800 placements of five pictures of the prints (four cropped from the saved JPEGs, D2 unlit from the phone photograph) across size, position, field and exposure: is 0.85 reachable by any framing? | `e_n_sweep.txt` |
+| `e_o_occl.py` | Occlusion maps for four boxes: each small patch in turn replaced by its own mean color, and how far the box's response falls | `occl.png`, `e_o_occl.txt` |
+| `e_p_transplant.py` | The ceiling light's patch swapped between frames, shown alone on a flat field, and kept in windows of shrinking size: does its score follow the patch or the rest of the picture? | `e_p_transplant.txt` |
+| `e_q_misc.py` | The sizes of all 69 recorded boxes; each layer's lowest reportable score and first score at or above 0.85; the October 29 scores only the finest layer can give; the recall and false-alarm rate at 0.25 from the float model's own evaluation counts, typed in from the training project's record (`deer_classifier/EVALUATION.md`: 175 of 517 deer found and 14 of 85 false alarms for `best.pt`, 182 and 9 for `last.pt`); set-up session 08 color-balanced, brightened and with the ceiling light painted out | `e_q_misc.txt` |
+| `e_r_wake.py` | A search over blocky color pictures for the highest response of the two coarser layers | `e_r_wake.txt` |
+| `patches.py` | The ceiling light's patch in six frames, enlarged | `patches.png` |
+| `ellipse_placements.py` | Soft ellipses 16 to 160 model pixels wide at nine placements on three fields: the best score of the finest layer and where it is | `ellipse_placements.txt` |
+| `prediction_setup08.py` | Set-up session 08, D1 held about 9 in from the lens, with its ceiling light painted out, then with everything but the sheet blanked | `prediction_setup08.txt` |
+| `prediction_sweep.py` | The spread of scores on the print over 1,512 placements of each of four pictures at 40 to 78 model pixels, the sizes of a print held farther from the lens | `prediction_sweep.txt` |
+| `replay_two_of_three.py` | The two-of-three rule of [temporal_gate.hpp](../../experiments/deer-classifier/src/temporal_gate.hpp) replayed over the main session's recorded scores at 26 levels from 0.85 down to 0.09, below the 10 to 100% the firmware allows, counting every box, only the boxes off the ceiling light, and only its boxes | `replay_two_of_three.txt` |
+| `preproc_boxes.py` | Where the boxes land when every main-session frame is decoded or resized another way, stretched without the gray bands, or flipped | `preproc_boxes.json`, `preproc_boxes.txt` |
+
+`inputs/IMG_6710.png` is the phone photograph IMG_6710, taken between trials 2 and 3 with the D2 print standing in front of the unit, as a full-size PNG (4032 × 3024).
+
+## What it shows
+
+- **The model answers small things.** Every box on the 74 frames is 37 to 83 camera pixels wide, 12 to 26% of the picture's width, and comes from the finest layer; the middle layer stays below its lowest reportable score (at most 0.047) and the coarsest is silent, even with a print filling the picture (`e_q_misc.txt`, `e_a_heads.txt`). That is no absolute limit: on one of the 175 detector photos the middle layer gives a box 144 camera pixels wide, 45% of the picture, at 0.1824, on a bright window and the wall around it (`e_j_captures.txt`, `e_j_captures.json`, the last tile of `captures_top.png`); large pictures of the prints do not wake it. On dark and mid fields shrinking helps every print: D1 in the capture light, centered on a dark field, goes from 0.037 at 200 model pixels (about 286 camera pixels) to 0.438 at 56 (80 camera pixels); on the bright field D3 stays below the lowest reportable score at every width (`e_f_scale.txt`). Over 16,800 placements of five pictures of the prints across size, position, field and exposure the best score is 0.5, and none reaches 0.85 (`e_n_sweep.txt`).
+- **Compact things low in the picture, the more so when bright.** A plain white ellipse 24 × 12 model pixels, placed low right where the ceiling light sits, scores 0.562, higher than any real picture, and plain ellipses 48 model pixels wide and more stay below the lowest reportable score (`ellipse_placements.txt`). A plain ellipse 40 × 20 responds most low in the picture, though below the lowest reportable score everywhere (`e_c_synth.txt`), and bright blobs on dark fields outscore dark blobs on bright ones by about 0.7 raw over 90 placements each (`e_k_polarity.txt`). On the 175 detector photos, none with a deer, the highest score is 0.438, on a small yellow object lying on a keyboard (`e_j_captures.txt`, `captures_top.png`).
+- **The ceiling light, low in the upside-down picture.** Painted out of the 12 frames of the empty room, it leaves no box in any of them, and painted out of trial 1's ten frames it leaves no box in eight and a 0.095 box elsewhere in two (`e_e_lamp.txt`). Flipped top to bottom, frame 56 of the empty room scores nothing, and the twelve empty frames at most 0.119, on small boxes away from the light (`e_e_lamp.txt`, `e_d_preproc.json`, `preproc_boxes.txt`); the light's crop pasted elsewhere in the empty room scores 0.223 to 0.378 low in the picture, 0 to 0.321 in the middle and nothing near the top, and nothing turned upside down in place (`e_e_lamp.txt`). Its response follows its own patch: with the empty room's patch the light's cells give −0.75 to 0 raw whatever the rest of the picture, with D3's −3.25 to −4.25 on the print frames and −2.0 even in the empty room (`e_p_transplant.txt`).
+- **An imitation of the capture light lifts a small print.** Drawn onto the unlit D2 (three colored lobes and a white core, where the light falls in frame 18), it raises the best score over the widths tried from 0.223 and 0.182 to 0.438 and 0.378 on dark and mid fields, though not on a bright field (0.269 to 0.182) (`e_h_clean.txt`). Occlusion shows where each box's response comes from, but where a lit torso and the capture light's patch coincide it cannot tell them apart (`e_o_occl.txt`, `occl.png`).
+- **Preparing the picture is as intended.** On eight frames the saved input differs from the saved JPEG, decoded with Pillow and prepared by a copy of the firmware's resize and scaling, by 0.6 to 0.7 of one input step on average in RGB order against 9 to 14 in BGR order, with gray bands of 57 above and below the picture, which is 114 scaled to the input (`e_d_preproc.txt`). Against the board's own input, Pillow's decode moves a frame's score by −2 to +3 steps of the ladder, a bilinear resize by −3 to +3, a box resize by −4 to +2 and stretching without the gray bands by −5 to +3, and each takes away or adds boxes on the lowest steps (`e_d_preproc.json`). A bilinear or box resize, or stretching, puts no box on a deer in any frame, and D1 at 2.5 in stays at 0 throughout; Pillow's decode keeps the boxes on D1's lit torso in trial 6 and takes away D3's head boxes (`preproc_boxes.txt`, `e_d_preproc.txt`).
+- **The 8-bit arithmetic between layers.** With the stored, rounded weights and every layer's output kept in decimal arithmetic, the ceiling light scores 0.511 to 0.555 in the empty room, the coarsest layer stays silent and the middle one reaches at most 0.079; a frame's best response moves by −1.163 to +1.967 raw (`e_g_float.txt`, `e_g_float.json`). Noise the size of the weights' rounding moves it with a spread of 0.16 to 0.78 raw (`e_m_weights.txt`).
+- **Counting only the boxes off the ceiling light, the two-of-three rule confirms at no level the firmware allows.** Nothing confirms at any level from 0.10 up; at 0.09, below the 10 to 100% the firmware allows, D3's head boxes confirm at frame 22 and D1's lit torso boxes in trial 6 at frame 60 (`replay_two_of_three.txt`).
+- **A print farther from the lens.** Set-up session 08's D1, about 9 in from the lens, keeps a box on the animal of 0.1824 with the ceiling light painted out and 0.148 with only the sheet kept (`prediction_setup08.txt`). Over 1,512 placements of each picture at 40 to 78 model pixels the median score on the print is 0.095 for D1 in room light, 0.076 for D2 unlit, 0.269 for D1 in the capture light and 0.148 for the dog in the capture light (`prediction_sweep.txt`).
+
+Scores move in fixed steps set by the model file. On the finest layer a reported score is sigmoid(k × 0.25) for a whole number k: 0.0953 (the lowest kept), 0.1192, 0.148, 0.1824, 0.2227, 0.2689, 0.3208, 0.3775, 0.4378, 0.5, and the first at or above 0.85 is 0.852; on the other two layers the steps are twice as large, the lowest kept 0.1192 and the first at or above 0.85 0.8808 (`e_q_misc.txt`, `recompute_oct29.txt`).
+
+## Scope
+
+The saved inputs are the board's exact model inputs; the edited copies, the crops of the saved JPEGs and the drawn shapes are made on a computer, and none of them was shown to the camera or run on the board. The reader agrees with the board at its outputs, on 74 scores and 69 boxes. Pillow's decode of the saved JPEGs, which many of the experiments use, moves a frame's score by up to three steps against the board's own decode, so differences that small, and any box on the lowest step, mean nothing. `e_g_float.py` keeps the stored, rounded weights, so it is not the model before its conversion to 8 bits, which is not run here. Frames within a trial are repeated looks at one scene, not independent trials.

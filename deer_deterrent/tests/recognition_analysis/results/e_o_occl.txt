@@ -1,0 +1,5 @@
+f62 D1 torso box cell (13, 17) base logit -1.75 largest drop 2.25 at (np.int64(11), np.int64(19)) cells with drop>=1 logit 13
+f21 D3 head box cell (7, 14) base logit -2.25 largest drop 2.75 at (np.int64(3), np.int64(16)) cells with drop>=1 logit 27
+s08 D1 ambient box on body cell (14, 15) base logit -1.75 largest drop 2.0 at (np.int64(12), np.int64(15)) cells with drop>=1 logit 25
+f56 ceiling light cell (22, 21) base logit 0.0 largest drop 1.0 at (np.int64(21), np.int64(21)) cells with drop>=1 logit 2
+(896, 448)

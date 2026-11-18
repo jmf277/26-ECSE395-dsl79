@@ -1,0 +1,28 @@
+{'scene': 'User-confirmed full-body deer image; no independent framing verification', 'frames': 33, 'first_frame': 275, 'last_frame': 307, 'maximum': 0.3775, 'mean': 0.216330303030303, 'median': 0.1824, 'confirmed_frames': 0, 'threshold': 0.85}
+{'scene': 'User-confirmed close-up deer image; framing not independently verified', 'frames': 33, 'first_frame': 409, 'last_frame': 441, 'maximum': 0.2227, 'mean': 0.08273939393939393, 'median': 0.0953, 'confirmed_frames': 0, 'threshold': 0.85}
+full n 33 first 275 last 307 mean 0.2163303 median 0.1824 max 0.3775 argmax frames [282, 283] zeros 1 >=.25 13 >=.85 0 present 0
+close n 33 first 409 last 441 mean 0.0827394 median 0.0953 max 0.2227 argmax frames [431] zeros 13 >=.25 0 >=.85 0 present 0
+complete lines 126
+frame number runs: [(1, 9), (1, 18), (51, 83), (275, 307), (409, 441)]
+all readable (incl cut) 129
+cut lines: [('19', '0.0000'), ('84', '0.0000'), ('308', '0.1824')] ['FRAME n=19 score=0.0000 present=0 capture_ms=0.30 decode_ms=24.7', 'FRAME n=84 score=0.0000 present=0 capture_ms=0.29 decode_ms=27.3', 'FRAME n=308 score=0.1824 present=0 capture_ms=0.31 decode_ms=27.']
+full json vs log mismatch []
+full mean capture 0.321 decode 27.734 infer 379.129 total 407.185 psram {1662572}
+close json vs log mismatch []
+close mean capture 0.314 decode 27.494 infer 378.889 total 406.698 psram {1662572}
+distinct [0.0, 0.0953, 0.1192, 0.148, 0.1824, 0.2227, 0.2689, 0.3208, 0.3775]
+ladder k*0.25 sigmoid [(-10, 0.0759), (-9, 0.0953), (-8, 0.1192), (-7, 0.148), (-6, 0.1824), (-5, 0.2227), (-4, 0.2689), (-3, 0.3208), (-2, 0.3775), (-1, 0.4378), (0, 0.5), (1, 0.5622), (2, 0.6225), (3, 0.6792), (4, 0.7311), (5, 0.7773), (6, 0.8176), (7, 0.852), (8, 0.8808)]
+thr 0.85 full (None, 0) close (None, 0)
+thr 0.5 full (None, 0) close (None, 0)
+thr 0.4 full (None, 0) close (None, 0)
+thr 0.35 full (9, 2) close (None, 0)
+thr 0.3 full (6, 8) close (None, 0)
+thr 0.25 full (6, 10) close (None, 0)
+thr 0.2 full (2, 17) close (None, 0)
+thr 0.15 full (2, 25) close (4, 1)
+thr 0.1 full (2, 32) close (4, 14)
+early 1-19 19 zeros 17 mean 0.0113 max 0.1192
+early 51-84 34 zeros 28 mean 0.0256 max 0.1824
+others n 63 >=.2 0 max 0.1824
+first-start frames 1-9 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+frame 308 score ['0.1824']
