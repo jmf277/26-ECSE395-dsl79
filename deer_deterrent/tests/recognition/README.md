@@ -24,6 +24,8 @@ python -m esptool --chip esp32s3 --port COM5 read_flash 0 0x400000 board-before-
 python -m esptool --chip esp32s3 --port COM5 --before default_reset --after hard_reset write_flash --flash_mode dio --flash_size 4MB --flash_freq 80m 0x0 bootloader.bin 0x8000 partition-table.bin 0x10000 classifier.bin
 ```
 
+The read-back file holds everything on the board, its saved settings and any Wi-Fi password among them; git ignores it, and it belongs in no shared folder. `python -m pip install "esptool>=4,<5"` installs the flashing tool, and on Windows PowerShell `Get-FileHash -Algorithm SHA256 <file>` prints the checksums `shasum -a 256` checks.
+
 ## What the trials set out to do
 
 Three deer photographs (D1, D2, D3) and one non-deer photograph (N1, a dog) were each printed on a sheet of about 8.5 × 11 inches. The series run was: five armed sensor trials with the white capture light (D1, D2, D3, N1, and D1 closer), each started by the operator's movement beside the unit; one manual, disarmed, continuous trial of 18 frames, empty view, then D1, then empty view again, six frames each, with no command between the phases; and, since no armed trial started the response, one output test, `TEST OUTPUT` injecting the alarm trigger a confirmed deer result sends. The threshold and the two-of-three rule stayed fixed, and every miss was kept. A blank-sheet control, a matched ambient-against-white pair, closer views of D2 and D3, and checks of the 120-second pause, of the startup warm-up and of cancellation were not part of this series.

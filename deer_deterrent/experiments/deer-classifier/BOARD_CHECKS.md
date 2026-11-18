@@ -4,7 +4,7 @@ Run these checks with the recorded-trial application and `tools/record_classifie
 
 ## Before flashing
 
-1. Read the firmware now on the board back to a file and keep it, before anything is written: `python -m esptool --chip esp32s3 --port COM5 read_flash 0 0x400000 board-before-flash.bin` (use the actual port). Writing that file back at `0x0` restores the board exactly. Without such a file, going back to the MVP detector means building [firmware/motion-size](../../firmware/motion-size/README.md) again, since no image of it is kept in the repository.
+1. Read the firmware now on the board back to a file and keep it, before anything is written: `python -m esptool --chip esp32s3 --port COM5 read_flash 0 0x400000 board-before-flash.bin` (use the actual port). Writing that file back at `0x0` restores the board exactly. Without such a file, going back to the MVP detector means building [firmware/motion-size](../../firmware/motion-size/README.md) again, since no image of it is kept in the repository. The file holds the board's saved settings, Wi-Fi password included; git ignores it.
 2. The recorded-trial program and the MVP detector use the same flash layout. The laptop-interface images use another layout and also write `0xE000`–`0xFFFF`, inside the settings area of the ESP-IDF programs; after them, the night-controlled detector's saved settings may have to be entered again.
 3. Flash with the commands in the [classifier guide](README.md) and confirm the existing camera/PIR/RGB/buzzer wiring and shared ground against [WIRING.md](../../WIRING.md). Leave the TFT disabled.
 

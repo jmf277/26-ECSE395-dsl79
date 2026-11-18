@@ -5,6 +5,8 @@
 *.pyc
 **/src/model_data.S
 tools/captures/
+# A board's flash read back before writing it; it holds the board's saved settings
+board-before-flash.bin
 # Host test programs built by the documented commands
 experiments/deer-classifier/test_trial_control
 experiments/deer-classifier/test_decision_to_alarm
