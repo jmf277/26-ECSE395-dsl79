@@ -33,7 +33,7 @@ void captureLightingChecks() {
   t=c.take();assert(t.pir&&t.illuminated&&c.beginCapture(t,Controller::warmupUs+2));
   c.arm(false);assert(!c.tick(Controller::warmupUs+3).white);c.release(t,Controller::warmupUs+4);
 }
-void independentOutputChecks() {
+void outputTestChecks() {
   Controller c(.85f);
   assert(c.startOutputTest(100));const auto id=c.outputTestId;
   assert(!c.armed&&!c.busy&&c.trial==0&&c.frame==0);
@@ -84,7 +84,7 @@ void sensorPauseAndRecordingChecks() {
   for(const char* bad:{"RECORD","RECORD jpeg","RECORD MIXED","RECORD FULL extra"})assert(parseCommand(bad).kind==CommandKind::Invalid);
 }
 int main() {
-  captureLightingChecks();independentOutputChecks();sensorPauseAndRecordingChecks();
+  captureLightingChecks();outputTestChecks();sensorPauseAndRecordingChecks();
   Controller c(.85f);
   assert(!c.take().generation && !c.armed && c.mode==Mode::Manual);
   assert(!c.startManual(0) && !c.startManual(601));
@@ -129,5 +129,5 @@ int main() {
   assert(parseCommand("LIGHT AMBIENT").kind==CommandKind::Ambient&&parseCommand("LIGHT WHITE").kind==CommandKind::White);
   assert(parseCommand("TEST OUTPUT").kind==CommandKind::OutputTest);
   for(int64_t i=0;i<=5500000;i+=10000){auto out=deterrent::pattern(i);assert(out.tone==(i<5500000&&i%2000000<1500000));assert(out.white==(i<5500000&&(i/100000)%2==0));}
-  std::puts("PASS: trial scheduling, isolated confirmation, cancellation, PIR warm-up/arming/rearming/cooldown, pause kept across STOP and mode changes, recording level, long-transfer alarm completion, capture-light isolation/watchdog, independent output-test lifecycle, command boundaries and waveform");
+  std::puts("PASS: trial scheduling, isolated confirmation, cancellation, PIR warm-up/arming/rearming/cooldown, pause kept across STOP and mode changes, recording level, long-transfer alarm completion, capture-light isolation/watchdog, output-test (injected alarm trigger) lifecycle, command boundaries and waveform");
 }
