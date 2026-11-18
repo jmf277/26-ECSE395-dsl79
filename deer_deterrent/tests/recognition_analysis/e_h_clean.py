@@ -18,7 +18,7 @@ with Image.open(stem(18)+'.jpg') as cam: CAM_QTABLES=cam.quantization; CAM_SUBSA
 def jpeg_path(canvas):
     b=io.BytesIO(); canvas.save(b,'JPEG',qtables=CAM_QTABLES,subsampling=CAM_SUBSAMPLING); b.seek(0)
     return np.asarray(Image.open(b).convert('RGB'))
-def test(pic,name,fields=(40,114,200),widths=(16,20,24,28,32,40,48,56,64,80,96,112,128,160,200,240,280,320),pos='centre',jp=None,show=True):
+def test(pic,name,fields=(40,114,200),widths=(16,20,24,28,32,40,48,56,64,80,96,112,128,160,200,240,280,320),pos='centre',jp=None,show=True,resample=None):
     w0,h0=pic.size; out={}
     for bg in fields:
         line={}
@@ -26,7 +26,7 @@ def test(pic,name,fields=(40,114,200),widths=(16,20,24,28,32,40,48,56,64,80,96,1
             H=int(round(W*h0/w0))
             if H>240: line[W]=None; continue
             c=Image.new('RGB',(320,240),(bg,bg,bg))
-            r=pic.resize((W,H),Image.BOX if W<w0*0.7 else Image.BICUBIC)
+            r=pic.resize((W,H),resample if resample is not None else (Image.BOX if W<w0*0.7 else Image.BICUBIC))
             l=(320-W)//2; t=(240-H)//2 if pos=='centre' else min(240-H,int(240*0.62-H/2))
             c.paste(r,(l,t))
             x=to_i8(firmware_resize((jp or jpeg_path)(c)))
@@ -64,10 +64,13 @@ test(tint(d2),'D2 sepia-tinted',fields=(40,114))
 c=d2
 print('--- D2 clean, lower in frame')
 test(d2,'D2 clean low',fields=(40,114),pos='low')
-# Which changes come from the imitation and which from the path? D2 as the camera saw it and as a person sees it (its mirror image),
-# each through the camera's JPEG settings and through Pillow's quality 60 with its default 4:2:0 chroma subsampling: per field, the best
-# score on the picture over the widths and the first width reaching it, unlit and lit, and the change in steps of the finest layer's
-# ladder, sigmoid(k*0.25)
+# Which changes come from the imitation and which from the path? The variants: D2 as the camera saw it and as a person sees it (its
+# mirror image, which puts the lobes on other parts of the body); each through the camera's JPEG settings and through Pillow's quality
+# 60 with its default 4:2:0 chroma subsampling; and each shrunk with five of Pillow's filters: box (what test() uses at every width here,
+# all below 0.7 of the print's width, as every experiment that shrinks a print does below that), bilinear, bicubic, nearest and Lanczos,
+# since a resize by itself moves a frame's score (e_d_preproc.py). A change that holds through all 20 does not come from what was varied;
+# the decode is Pillow's in every one. Per field: the best score on the picture over the widths and the first width reaching it, unlit
+# and lit, and the change in steps of the finest layer's ladder, sigmoid(k*0.25)
 def jpeg_q60(canvas):
     b=io.BytesIO(); canvas.save(b,'JPEG',quality=60); b.seek(0)
     return np.asarray(Image.open(b).convert('RGB'))
@@ -77,8 +80,9 @@ def best(r):
         s=max(v[0] for v in line.values() if v); out[bg]=(s,min(W for W,v in line.items() if v and v[0]==s))
     return out
 def step(s): return round(float(np.log(s/(1-s)))/0.25)
-print('--- D2 as the camera saw it and as a person sees it, through two JPEG settings: per field, the best on the picture over the widths (first width in camera px reaching it), unlit -> lit, and the change in ladder steps')
+print('--- D2 as the camera saw it and as a person sees it, through two JPEG settings, shrunk with five filters: per field, the best on the picture over the widths (first width in camera px reaching it), unlit -> lit, and the change in ladder steps')
 for view,pic in (('as the camera saw it',d2),('as a person sees it',ImageOps.mirror(d2))):
     for jname,jp in (("the camera's JPEG settings",jpeg_path),("Pillow's quality 60, 4:2:0",jpeg_q60)):
-        un=best(test(pic,'D2',jp=jp,show=False)); li=best(test(lit(pic),'D2',jp=jp,show=False))
-        print('D2',view+', through',jname+':',' | '.join(f'field {bg} {un[bg][0]} ({un[bg][1]}) -> {li[bg][0]} ({li[bg][1]}), steps {step(li[bg][0])-step(un[bg][0]):+d}' for bg in un))
+        for fname,rs in (('box',Image.BOX),('bilinear',Image.BILINEAR),('bicubic',Image.BICUBIC),('nearest',Image.NEAREST),('Lanczos',Image.LANCZOS)):
+            un=best(test(pic,'D2',jp=jp,show=False,resample=rs)); li=best(test(lit(pic),'D2',jp=jp,show=False,resample=rs))
+            print('D2',view+', through',jname+', shrunk with the',fname,'filter:',' | '.join(f'field {bg} {un[bg][0]} ({un[bg][1]}) -> {li[bg][0]} ({li[bg][1]}), steps {step(li[bg][0])-step(un[bg][0]):+d}' for bg in un))
