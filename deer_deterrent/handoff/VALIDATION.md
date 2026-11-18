@@ -14,7 +14,7 @@ When extracting the shared-drive ZIP, retain the directory structure. The full p
 
 ## Recognition, laptop and night programs
 
-These host checks and target builds cover the programs in `experiments/deer-classifier`, `experiments/camera-wifi-bringup` and `firmware/night-control` and the tools. They establish what the software does in the tested cases, not behaviour on the board. Run from `deer_deterrent` unless noted; the C++ checks used Apple clang 21 with `-std=c++17 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined` (drop the sanitizer flags on a compiler without them).
+These host checks and target builds cover the programs in `experiments/deer-classifier`, `experiments/camera-wifi-bringup` and `firmware/night-control` and the tools. They establish what the software does in the tested cases, not behaviour on the board. Run from `deer_deterrent` unless noted. The three C++ tests of the experiment folders used Apple clang 21 with `-std=c++17 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined` (drop the sanitizer flags on a compiler without them); the night-controlled detector's suites build with strict warnings and the undefined-behaviour sanitizer only, as its [build note](../firmware/night-control/BUILD-STATUS.txt) says.
 
 | Check | Result |
 |---|---|
