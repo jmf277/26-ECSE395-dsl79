@@ -164,7 +164,7 @@ def discover_sessions(paths):
 
 def report_path(path):
     """A session folder as reported: relative to the working directory when it lies
-    inside it, so reports made from the repository root carry no machine-specific paths."""
+    inside it, so reports made from the `deer_deterrent` folder carry no machine-specific paths."""
     try:
         return Path(path).relative_to(Path.cwd().resolve()).as_posix()
     except ValueError:

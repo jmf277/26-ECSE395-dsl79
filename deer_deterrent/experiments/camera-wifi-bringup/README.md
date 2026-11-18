@@ -36,7 +36,7 @@ Use [tools/laptop_classifier.py](../../tools/laptop_classifier.py) in the existi
 - `--esp-detection`: the compatible Espressif ESP-Detection checkout used by the model environment.
 - `--output`: a new session directory for the actual JPEGs, predictions and response receipts.
 
-Run `python tools/laptop_classifier.py --help` from the repository root for all arguments. `--capture` requests one manual burst once the program is warmed up and not paused, retrying if the request is refused; otherwise the client processes PIR-triggered bursts. `--arm` permits physical responses. Startup first stops/disarms the board; it then arms only when requested. The client stops/disarms on normal exit, interruption or a processing error, recording any failed stop request. The default run lasts 180 seconds.
+Run `python tools/laptop_classifier.py --help` from the `deer_deterrent` folder for all arguments. `--capture` requests one manual burst once the program is warmed up and not paused, retrying if the request is refused; otherwise the client processes PIR-triggered bursts. `--arm` permits physical responses. Startup first stops/disarms the board; it then arms only when requested. The client stops/disarms on normal exit, interruption or a processing error, recording any failed stop request. The default run lasts 180 seconds.
 
 The client applies the same two-of-three rule with the repository's `experiments/deer-classifier/temporal_gate.py` and records each photo's confirmation beside the device's; a difference is recorded as an error. A photo that fails to download, check, score or be acknowledged is recorded with its error and passed over, without ending the session; a device reboot or about ten seconds without a reachable device ends it.
 

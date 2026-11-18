@@ -9,7 +9,7 @@ Use these tools to retain serial evidence, check photo transfers, and replay com
 - `pyserial` only for live recording: `python -m pip install -r tools/requirements.txt`.
 - Pillow for the recognition recorder, the laptop client and their tests: `python -m pip install -r tools/requirements-classifier.txt`, which includes `requirements.txt`.
 
-Run the examples from the repository root. Replay and automated checks do not require a board, PlatformIO or network access.
+Run the examples from the `deer_deterrent` folder. Replay and automated checks do not require a board, PlatformIO or network access.
 
 ## Analyze retained recordings
 
@@ -53,7 +53,7 @@ python tools/record_photos.py --port COM5 --seconds 30 --label baseline --calibr
 python tools/record_photos.py --port COM5 --seconds 60 --label controlled-approach --arm
 ```
 
-`--calibrate` sends `BASELINE`; clear the camera view before using it. `--arm` sends `ARM` for a controlled observation. Device pause, clock and night policy still govern whether it can arm. Check the separate device acknowledgment and policy state. Neither option describes an independent trial by itself.
+`--calibrate` sends `BASELINE`; clear the camera view before using it. `--arm` sends `ARM` for a controlled observation. With the night-controlled detector, its pause, clock and night policy still govern whether it can arm. Check the separate device acknowledgment and policy state. Neither option describes an independent trial by itself.
 
 `--config-file path` and `--firmware-binary path` record hashes of supplied files. They do not apply a configuration, flash a binary, or establish the identity of the running binary. `--notes` stores operator-provided setup context. Available source files are hashed locally; the manifest explicitly marks flashed-binary identity as unverified.
 
@@ -119,7 +119,7 @@ A session first records the board's `STATUS` reply in its manifest and then send
 
 The summary keeps recording errors apart from warnings (a box list it cannot check; the frame is kept) and from device log diagnostics (ESP-IDF `E (...)`/`W (...)` lines). A failed transfer gives one error, a transfer cancelled by `STOP` is counted as cancelled, and `trials.csv` lists each trial's frames, highest score and decision. The gallery draws each record's detection boxes and scores over the unchanged JPEG. The manifest is closed with the board's state at the start, the firmware seen, the model hash and the size and SHA-256 of every saved file. The tests cover byte-exact pairing, damaged and cancelled transfers, the recording level, `TEST OUTPUT`'s events, device log lines, a lost port, `QUIT` and the opening state over a stand-in port, markers, the trial table, drawn boxes and the closing manifest.
 
-The practical `record_photos.py`/`replay_records.py` pipeline handles changed-area/growth records. Neural scores and tensors are not motion percentages; the two protocols and analyses are kept distinct. Both retain raw bytes and explicit incomplete/error records.
+The detector's `record_photos.py`/`replay_records.py` pipeline handles changed-area/growth records. Neural scores and tensors are not motion percentages; the two protocols and analyses are kept distinct. Both retain raw bytes and explicit incomplete/error records.
 
 ## Laptop recognition and verdict return
 

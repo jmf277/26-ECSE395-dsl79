@@ -1,6 +1,6 @@
 # Test evidence: current results and historical experiments
 
-Open [index.html](index.html) locally after downloading/cloning to browse every saved session. Dates in filenames retain the original recorded labels. Do not treat successive frames as independent accuracy trials.
+Open [index.html](index.html) locally after downloading/cloning to browse the detector's saved sessions under `captures`; each recorded recognition session under `recognition` has its own gallery. Dates in filenames retain the original recorded labels. Do not treat successive frames as independent accuracy trials.
 
 ## Current 10% + growth firmware (October 31)
 
