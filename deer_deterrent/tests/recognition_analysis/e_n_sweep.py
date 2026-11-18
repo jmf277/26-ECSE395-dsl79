@@ -1,5 +1,5 @@
-# Is 0.85 reachable by any framing?  Sweep size, position, field and exposure for five pictures of the prints: D2 unlit (the phone
-# photograph), D1 in room light (set-up session 08), and D1, D2 and the dog in the capture light (frames 6, 18 and 32).
+# Is 0.85 reachable by any framing?  Sweep size, position, field and exposure for five pictures of the prints: D2 unlit (from the phone
+# photograph, as the camera saw it), D1 in room light (set-up session 08), and D1, D2 and the dog in the capture light (frames 6, 18 and 32).
 import sys,glob,io,json; sys.path.insert(0,'.')
 import numpy as np
 from PIL import Image,ImageEnhance

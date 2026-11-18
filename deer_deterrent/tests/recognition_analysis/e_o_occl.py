@@ -1,4 +1,4 @@
-# Occlusion: replace a small patch at a time with its own mean color; how far does the response of the best cell fall?  Shows where in the
+# Occlusion: replace a small patch at a time with its own mean color; how far does the response of the chosen box's cell fall?  Shows where in the
 # picture that response comes from (where a lit torso and the capture light's patch coincide, it cannot tell them apart).
 import sys,glob,json; sys.path.insert(0,'.')
 import numpy as np

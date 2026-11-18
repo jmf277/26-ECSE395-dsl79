@@ -21,7 +21,8 @@ for name,d in (('full',fb),('close',cu)):
     nz=[o['score'] for o in d['observations'] if o['score']>0]
     odd=sum(k(s)%2==1 for s in nz)
     print(name,'non-zero',len(nz),'odd k (finest head only)',odd,'even k',len(nz)-odd, sorted(set(k(s) for s in nz)))
-# the float model's own evaluation at 0.25, best.pt and last.pt: TP, FN, FP, TN as the training project's deer_classifier/EVALUATION.md gives them
+# the float model's own evaluation at 0.25, best.pt and last.pt: TP, FN, FP, TN as the training project's record gives them,
+# deer_classifier/EVALUATION.md in the model's repository, F26-ECSE395-ams926 (linked from ../../SOURCES.md)
 tp,fn,fp,tn=175,342,14,71
 rec=tp/(tp+fn); fpr=fp/(fp+tn); print('best .25: recall',round(rec,4),'fpr',round(fpr,4),'LR+',round(rec/fpr,2),'precision if deer and non-deer equally common',round(rec/(rec+fpr),3))
 tp,fn,fp,tn=182,335,9,76
@@ -34,7 +35,7 @@ gain=crop.reshape(-1,3).mean(0); gain=gain.mean()/gain
 print('frame s08 picture-area mean RGB',crop.reshape(-1,3).mean(0).round(1),'gains',gain.round(2))
 for name,a in (('as saved',im),('gray-world balanced',np.clip(im*gain,0,255)),('balanced, brighter x1.5',np.clip(im*gain*1.5,0,255))):
     o=forward(to_i8(firmware_resize(a.astype(np.uint8)))); print(name,[(round(b['score'],3),b['box']) for b in boxes(o)][:5])
-# the ceiling light painted out of s08, balanced
+# the ceiling light painted out of s08, balanced and brightened
 x=to_i8(firmware_resize(np.clip(im*gain*1.5,0,255).astype(np.uint8))).copy()
 x[168:196,140:210]=np.round(x[160:168,140:210].reshape(-1,3).mean(0)).astype(np.int8)
 o=forward(x); print('balanced, brighter, light painted out',[(round(b['score'],3),b['box']) for b in boxes(o)][:5])

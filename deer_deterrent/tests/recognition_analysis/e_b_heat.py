@@ -33,7 +33,6 @@ for name,st in items:
     hm=Image.fromarray(heat).resize((224,224),Image.NEAREST)
     blend=Image.blend(im.convert('RGB'),hm,0.55)
     d=ImageDraw.Draw(blend)
-    # draw grid? no. Boxes:
     for b in boxes(out):
         bb=b['box']; f=224/320
         d.rectangle([bb[0]*f,bb[1]*f+28,bb[2]*f,bb[3]*f+28],outline=(0,255,0))

@@ -11,7 +11,7 @@ print(len(rows),'frames; keys sample',sorted(rows[0].keys())[:40])
 print('frame numbers in file',rows[0]['frame'],rows[-1]['frame'],'trials',sorted(set(r['trial'] for r in rows)),'triggers',sorted(set(r.get('trigger') for r in rows)))
 # running frame number across the session: position in file order
 for i,r in enumerate(rows,1): r['n']=i
-assert all(r['frame']==r['n'] for r in rows) or print('frame field not running; using file order')
+assert all(r['frame']==r['n'] for r in rows)
 def onlight(b): return b[0]>=200 and b[1]>=195
 def phase(n):
     return 't1 D1 5in' if n<=10 else 't2 D2' if n<=20 else 't3 D3' if n<=30 else 't4 N1 dog' if n<=40 else 't5 D1 2.5in' if n<=50 else 't6 empty before' if n<=56 else 't6 D1' if n<=62 else 't6 empty after'
@@ -35,7 +35,6 @@ for lv in levels:
         sel=[r for r in rows if r['trial']==t]
         f,conf=gate([(r['n'],score_all(r)) for r in sel],lv)
         if f: 
-            # which box carries the hits on the confirming frames?
             res[t]=(f,len(conf))
     print(lv,res)
 print('\nlevel | same, counting ONLY boxes NOT on the light (deer-located boxes)')

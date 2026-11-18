@@ -1,9 +1,10 @@
 """Minimal read-only FlatBuffers walker for the ESP-DL .espdl container.
 
-The field numbers below were worked out by walking the file itself (walk1.py, walk2.py)
-and agree with ESP-DL's own schema, espdl.fbs (ESP-DL 3.3.14, the version the trial
-program builds with), which dump_model.py follows: the layout mirrors ONNX, which is
-what ESP-DL's schema was derived from. Everything printed is read from the bytes.
+The field numbers are given by its callers: walk1.py and walk2.py worked them out by walking
+the file itself, and they agree with ESP-DL's own schema, espdl.fbs (ESP-DL 3.3.14, the
+version the trial program builds with), which dump_model.py follows; interp.py uses the same
+numbers. The layout mirrors ONNX, which is what ESP-DL's schema was derived from. Everything
+its callers print is read from the bytes.
 """
 import struct
 

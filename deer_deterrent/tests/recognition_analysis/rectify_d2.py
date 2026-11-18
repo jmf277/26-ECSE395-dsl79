@@ -1,6 +1,6 @@
 import sys; sys.path.insert(0,'.')
 import numpy as np
-from PIL import Image
+from PIL import Image,ImageOps
 im=Image.open('inputs/IMG_6710.png').convert('RGB')
 print(im.size)
 s=4032/1600
@@ -16,4 +16,7 @@ def coeffs(dst,src):
         M.append([x,y,1,0,0,0,-u*x,-u*y]); M.append([0,0,0,x,y,1,-v*x,-v*y])
     return np.linalg.solve(np.array(M,float),np.array(src,float).reshape(8))
 out=im.transform((W,H),Image.PERSPECTIVE,coeffs(dst,src),Image.BICUBIC)
+# that is the print as a person sees it. The camera's pictures are mirror images of the scene (neither mirror nor flip was set,
+# ../recognition/README.md), so mirror it left to right: D2 as the camera saw it, head and antlers on the left as in frame 18
+out=ImageOps.mirror(out)
 out.save('results/d2_rectified.png'); print(out.size)

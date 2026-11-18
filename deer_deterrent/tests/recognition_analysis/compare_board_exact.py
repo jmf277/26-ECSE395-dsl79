@@ -1,16 +1,16 @@
 # The comparison of compare_board.py with a tolerance on the score (float32 vs double) and exact pixels on boxes, and
 # a from-scratch decode written against dl_detect_espdet_postprocessor.cpp / dl_detect_postprocessor.cpp (float32 arithmetic),
-# and timing of the model step alone.
+# and timing of the model step alone, and the bound on the 20-bit run (compare_board.py ... sat): the largest sum any
+# convolution reaches, bias included, before the shift, against the [-2^19, 2^19-1] that run holds it to.
 import sys,glob,json,os,time,math
 import numpy as np
 sys.path.insert(0,'.')
-from interp import Model,decode
+from interp import Model,decode,rshift_round
 MODEL,REC=sys.argv[1],sys.argv[2]
 m=Model(MODEL)
 F32=np.float32
-def my_decode(T,exp,thr=F32(0.10),nms=F32(0.70),topk=10):
+def f32_decode(T,exp,thr=F32(0.10),nms=F32(0.70),topk=10):
     res=[]
-    inv=F32(320)/F32(168)*F32(168)/F32(224)  # placeholder not used
     inv_x=F32(320)/F32(224); inv_y=F32(240)/F32(168)
     for st,sd in enumerate((8,16,32)):
         sc=T[f'score{st}']; bx=T[f'box{st}']
@@ -49,7 +49,7 @@ def my_decode(T,exp,thr=F32(0.10),nms=F32(0.70),topk=10):
     return res
 files=sorted(glob.glob(REC+'/*/*.input.i8'))
 print(len(files),'saved inputs')
-tot_boxes=0; ok_px=0; ok_sc=0; ok_frames=0; ok_my=0; tm=[]; stages={0:0,1:0,2:0}; sess={}
+tot_boxes=0; ok_px=0; ok_sc=0; ok_frames=0; ok_f32=0; tm=[]; stages={0:0,1:0,2:0}; sess={}
 hash_set=set()
 bad=[]
 for f in files:
@@ -61,15 +61,15 @@ for f in files:
     o={k:T[k] for k in m.outputs}
     out=decode(o,m.exp); t2=time.perf_counter()
     tm.append((t1-t0,t2-t1))
-    mine=my_decode(o,m.exp)
+    f32_out=f32_decode(o,m.exp)
     rb=[(tuple(b['box']),b['score']) for b in rec['boxes']]
     ob=[(tuple(r['box']),r['score']) for r in out]
-    mb=[(tuple(r['box']),r['score']) for r in mine]
+    mb=[(tuple(r['box']),r['score']) for r in f32_out]
     tot_boxes+=len(rb)
     # order-preserving comparison: record's list order versus decode order
     same_order=[a[0] for a in rb]==[a[0] for a in ob]
-    s_rec=rec['score']; s_me=max([r['score'] for r in out],default=0.0)
-    sok=abs(s_rec-s_me)<1e-6
+    s_rec=rec['score']; s_computed=max([r['score'] for r in out],default=0.0)
+    sok=abs(s_rec-s_computed)<1e-6
     ok_sc+=sok
     # match boxes as multisets by pixels + score within 1e-6
     rem=list(ob); good=0
@@ -80,19 +80,48 @@ for f in files:
     allgood=(good==len(rb) and not rem)
     ok_frames+=allgood
     # float32 exact equality of the from-scratch decode
-    myok=sorted((tuple(a[0]),round(a[1],9)) for a in mb)==sorted((tuple(a[0]),round(a[1],9)) for a in rb)
-    ok_my+=myok
+    f32_ok=sorted((tuple(a[0]),round(a[1],9)) for a in mb)==sorted((tuple(a[0]),round(a[1],9)) for a in rb)
+    ok_f32+=f32_ok
     for r in out: stages[r['stage']]+=1
-    if not(allgood and sok and myok and same_order):
-        bad.append((os.path.basename(st),sok,allgood,myok,same_order,rb,ob,mb))
+    if not(allgood and sok and f32_ok and same_order):
+        bad.append((os.path.basename(st),sok,allgood,f32_ok,same_order,rb,ob,mb))
     k=os.path.basename(os.path.dirname(f)); sess.setdefault(k,[0,0]); sess[k][0]+=1; sess[k][1]+=len(rb)
 print('score within 1e-6:',ok_sc,'of',len(files))
 print('boxes in records:',tot_boxes,'; matched to the pixel and within 1e-6 in score:',ok_px)
 print('frames with identical box lists (pixels, score within 1e-6):',ok_frames,'of',len(files))
-print('from-scratch float32 decode equal to the record exactly (score to 9 decimals):',ok_my,'of',len(files))
+print('from-scratch float32 decode equal to the record exactly (score to 9 decimals):',ok_f32,'of',len(files))
 print('boxes by detection layer in interp decode (0 fine,1 mid,2 coarse):',stages)
 print('frames/boxes by session:',sess)
 print('model hash in records:',hash_set)
 tm=np.array(tm); print('seconds per frame: network median %.4f mean %.4f min %.4f; decode median %.5f'%(np.median(tm[:,0]),tm[:,0].mean(),tm[:,0].min(),np.median(tm[:,1])))
 print('frames with any difference:',len(bad))
 for b in bad: print(b)
+# The bound on the 20-bit run: interp.py's convolution (Model.conv) unchanged but for measuring each sum, bias included,
+# before the shift, the value that run holds to [-2^19, 2^19-1]: the largest in magnitude, and how many are 2^19 or more
+# in magnitude. Its output must equal interp.py's on every input.
+class SumModel(Model):
+    def __init__(self,path,qacc_sat=False):
+        super().__init__(path,qacc_sat); self.largest=0; self.beyond=0
+    def conv(self,nd,x):
+        at=nd['at']; sy,sx=at['strides']; pt,pl,pb,pr=at['pads']; w=nd['w']; kh,kw=w.shape[:2]
+        xp=np.pad(x,((pt,pb),(pl,pr),(0,0)))
+        OH=(x.shape[0]+pt+pb-kh)//sy+1; OW=(x.shape[1]+pl+pr-kw)//sx+1
+        dep=at['group']!=1; N=x.shape[2] if dep else w.shape[3]
+        acc=np.zeros((OH,OW,N),dtype=np.int64)
+        for i in range(kh):
+            for j in range(kw):
+                sl=xp[i:i+sy*(OH-1)+1:sy,j:j+sx*(OW-1)+1:sx,:]
+                acc+=(sl*w[i,j]) if dep else (sl@w[i,j])
+        if nd['bias'] is not None: acc+=nd['bias']
+        a=np.abs(acc); self.largest=max(self.largest,int(a.max())); self.beyond+=int((a>=(1<<19)).sum())
+        if self.qacc_sat: acc=np.clip(acc,-(1<<19),(1<<19)-1)
+        out=np.clip(rshift_round(acc,nd['mac_shift']),-128,127)
+        if at['activation']=='Relu': out=np.maximum(out,0)
+        else: assert at['activation']=='Linear',at['activation']
+        return out
+sm=SumModel(MODEL)
+for f in files:
+    x=np.fromfile(f,dtype=np.int8).reshape(224,224,3)
+    T=m.run(x); T2=sm.run(x)
+    assert T.keys()==T2.keys() and all(np.array_equal(T[k],T2[k]) for k in T),f
+print('convolution sums, bias included, before the shift, which the 20-bit run holds to [-2^19, 2^19-1]: largest in magnitude',sm.largest,'; at or beyond 2^19 =',1<<19,'in magnitude:',sm.beyond)

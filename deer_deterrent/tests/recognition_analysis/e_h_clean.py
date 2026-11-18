@@ -1,20 +1,24 @@
-# The D2 print from the phone photograph IMG_6710, with no capture light on it: gray, cut out on a printed checkerboard, and out of focus
-# (the phone focused on the wires). "Clean" below means unlit.
-# Same picture at every size, on plain fields, through a camera-like path: 320x240, JPEG, nearest, letterbox.
+# The D2 print from the phone photograph IMG_6710, as the camera saw it (rectify_d2.py), with no capture light on it: gray, cut out on a
+# printed checkerboard, and out of focus (the phone focused on the wires). "Clean" below means unlit.
+# Same picture at every size, on plain fields, through a camera-like path: 320x240, JPEG with the camera's own quantization tables and
+# chroma subsampling, Pillow's decode, nearest, letterbox.
 import sys,glob,os,json,io; sys.path.insert(0,'.')
 import numpy as np
-from PIL import Image,ImageDraw,ImageEnhance
+from PIL import Image,ImageDraw,ImageEnhance,ImageOps,JpegImagePlugin
 from exp_util import *
 d2=Image.open('results/d2_rectified.png').convert('RGB')
-# keep the picture area only (drop the dark top-right corner and the marker edge)
-d2=d2.crop((10,40,470,555))
+# keep the picture area only (drop the dark top-left corner and the marker edge at the left)
+d2=d2.crop((30,40,490,555))
 # whiten the ambient cast a little so the paper reads neutral
 a=np.asarray(d2).astype(float); a=a/np.median(a.reshape(-1,3),axis=0)*200; d2=Image.fromarray(np.clip(a,0,255).astype(np.uint8))
 d2.save('results/d2_clean.png')
-def jpeg_path(canvas,q=60):
-    b=io.BytesIO(); canvas.save(b,'JPEG',quality=q); b.seek(0)
+# the camera's own JPEG settings, as frame 18's saved JPEG carries them: the quantization tables its quality 12 gives (a setting on the
+# camera's own scale, not Pillow's) and its 4:2:2 chroma subsampling
+with Image.open(stem(18)+'.jpg') as cam: CAM_QTABLES=cam.quantization; CAM_SUBSAMPLING=JpegImagePlugin.get_sampling(cam)
+def jpeg_path(canvas):
+    b=io.BytesIO(); canvas.save(b,'JPEG',qtables=CAM_QTABLES,subsampling=CAM_SUBSAMPLING); b.seek(0)
     return np.asarray(Image.open(b).convert('RGB'))
-def test(pic,name,fields=(40,114,200),widths=(16,20,24,28,32,40,48,56,64,80,96,112,128,160,200,240,280,320),pos='centre'):
+def test(pic,name,fields=(40,114,200),widths=(16,20,24,28,32,40,48,56,64,80,96,112,128,160,200,240,280,320),pos='centre',jp=None,show=True):
     w0,h0=pic.size; out={}
     for bg in fields:
         line={}
@@ -25,7 +29,7 @@ def test(pic,name,fields=(40,114,200),widths=(16,20,24,28,32,40,48,56,64,80,96,1
             r=pic.resize((W,H),Image.BOX if W<w0*0.7 else Image.BICUBIC)
             l=(320-W)//2; t=(240-H)//2 if pos=='centre' else min(240-H,int(240*0.62-H/2))
             c.paste(r,(l,t))
-            x=to_i8(firmware_resize(jpeg_path(c)))
+            x=to_i8(firmware_resize((jp or jpeg_path)(c)))
             o=forward(x); hm=head_max(o)
             q=o['score0'][...,0]*0.25
             ys,xs=np.mgrid[0:28,0:28]; cx=(xs*8+4)/0.7; cy=(ys*8+4-28)/0.7
@@ -33,11 +37,13 @@ def test(pic,name,fields=(40,114,200),widths=(16,20,24,28,32,40,48,56,64,80,96,1
             best=float(q[ins].max()) if ins.any() else -99
             line[W]=(round(1/(1+np.exp(-best)),3),round(hm[1]['prob'],3),round(hm[2]['prob'],6))
         out[bg]=line
-        print(name,'field',bg,'{width camera px: (best head0 on picture, best head1 anywhere, best head2 anywhere)}')
-        print('   ',line)
+        if show:
+            print(name,'field',bg,'{width camera px: (best head0 on picture, best head1 anywhere, best head2 anywhere)}')
+            print('   ',line)
     return out
 r1=test(d2,'D2 clean')
-# with a hot spot like the capture light's: three offset color lobes plus a white core at the position seen in frame 18
+# with a hot spot like the capture light's: three offset color lobes, red, green and blue, at the positions seen in frame 18, white where
+# they overlap
 def lit(pic,strength=1.0):
     a=np.asarray(pic).astype(float); h,w=a.shape[:2]
     yy,xx=np.mgrid[0:h,0:w]
@@ -58,3 +64,21 @@ test(tint(d2),'D2 sepia-tinted',fields=(40,114))
 c=d2
 print('--- D2 clean, lower in frame')
 test(d2,'D2 clean low',fields=(40,114),pos='low')
+# Which changes come from the imitation and which from the path? D2 as the camera saw it and as a person sees it (its mirror image),
+# each through the camera's JPEG settings and through Pillow's quality 60 with its default 4:2:0 chroma subsampling: per field, the best
+# score on the picture over the widths and the first width reaching it, unlit and lit, and the change in steps of the finest layer's
+# ladder, sigmoid(k*0.25)
+def jpeg_q60(canvas):
+    b=io.BytesIO(); canvas.save(b,'JPEG',quality=60); b.seek(0)
+    return np.asarray(Image.open(b).convert('RGB'))
+def best(r):
+    out={}
+    for bg,line in r.items():
+        s=max(v[0] for v in line.values() if v); out[bg]=(s,min(W for W,v in line.items() if v and v[0]==s))
+    return out
+def step(s): return round(float(np.log(s/(1-s)))/0.25)
+print('--- D2 as the camera saw it and as a person sees it, through two JPEG settings: per field, the best on the picture over the widths (first width in camera px reaching it), unlit -> lit, and the change in ladder steps')
+for view,pic in (('as the camera saw it',d2),('as a person sees it',ImageOps.mirror(d2))):
+    for jname,jp in (("the camera's JPEG settings",jpeg_path),("Pillow's quality 60, 4:2:0",jpeg_q60)):
+        un=best(test(pic,'D2',jp=jp,show=False)); li=best(test(lit(pic),'D2',jp=jp,show=False))
+        print('D2',view+', through',jname+':',' | '.join(f'field {bg} {un[bg][0]} ({un[bg][1]}) -> {li[bg][0]} ({li[bg][1]}), steps {step(li[bg][0])-step(un[bg][0]):+d}' for bg in un))
