@@ -15,7 +15,12 @@ inline Outputs pattern(int64_t elapsedUs) {
             elapsedUs % 2000000 < 1500000};
 }
 // Outputs (WIRING.md): the RGB module's R, G and B pins, all on for white,
-// and the passive buzzer driven by PWM at a 2 kHz tone, half duty.
+// and the passive buzzer driven by PWM at a 2 kHz tone, half duty. The buzzer
+// module, marked low-level trigger, conducts while its input is low, so the
+// programs that take these values hold buzzerPin high whenever the buzzer is
+// silent: set high at startup, then a high output between tones (the ESP-IDF
+// programs invert the tone output, so duty 0 is high; the Arduino laptop
+// program writes full duty).
 constexpr int whitePins[3] = {13, 36, 35};
 constexpr int buzzerPin = 10;
 constexpr uint32_t toneHz = 2000;

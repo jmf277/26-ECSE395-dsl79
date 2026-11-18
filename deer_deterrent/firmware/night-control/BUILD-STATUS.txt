@@ -3,8 +3,8 @@ Night-controlled detector: build and test status
 Written and tested on a computer; never flashed to or run on the unit.
 
 Target: ESP32-S3, ESP-IDF 5.4.2, Xtensa GCC 14.2.0 (esp-14.2.0_20241119).
-Normal application (DEER_CAMERA_DIAGNOSTIC=OFF): 1,034,720 bytes.
-Bounded camera-diagnostic application (DEER_CAMERA_DIAGNOSTIC=ON): 1,034,080 bytes.
+Normal application (DEER_CAMERA_DIAGNOSTIC=OFF): 1,034,736 bytes.
+Bounded camera-diagnostic application (DEER_CAMERA_DIAGNOSTIC=ON): 1,034,096 bytes.
 Factory partition: 4,128,768 bytes; both fit.
 Detector rule: firmware/motion-size/src/approach_gate.hpp, included unchanged.
 Alarm waveform: shared/alarm_pattern.hpp.

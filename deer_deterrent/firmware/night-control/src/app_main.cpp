@@ -94,7 +94,8 @@ bool algorithmSelftest() {
 }
 
 void cameraPowerSetup() {
-    for(auto pair : {std::pair<int,int>{7,1},{45,0},{21,1},{deterrent::buzzerPin,0},{37,0}}) {
+    // The buzzer input starts high, its silent level (shared/alarm_pattern.hpp).
+    for(auto pair : {std::pair<int,int>{7,1},{45,0},{21,1},{deterrent::buzzerPin,1},{37,0}}) {
         gpio_set_level(static_cast<gpio_num_t>(pair.first),pair.second);
         gpio_set_direction(static_cast<gpio_num_t>(pair.first),GPIO_MODE_OUTPUT);
     }

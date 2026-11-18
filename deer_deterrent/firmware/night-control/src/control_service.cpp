@@ -280,6 +280,7 @@ bool initialize() {
     if(ledc_timer_config(&timerConfig)!=ESP_OK) return false;
     ledc_channel_config_t channel={};channel.gpio_num=deterrent::buzzerPin;channel.speed_mode=LEDC_LOW_SPEED_MODE;
     channel.channel=LEDC_CHANNEL_2;channel.timer_sel=LEDC_TIMER_1;channel.duty=0;
+    channel.flags.output_invert=1; // duty 0 holds the buzzer input high, its silent level
     if(ledc_channel_config(&channel)!=ESP_OK) return false;
     outputsReady=true;
     if(!load()) {fatal("storage_read_or_initial_save");return false;}

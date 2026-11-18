@@ -181,9 +181,10 @@ void outputTick(void*) {
   applyOutputs(controller.tick(esp_timer_get_time()));
 }
 bool initializeOutputs() {
+  // White off; the buzzer input high, its silent level (shared/alarm_pattern.hpp).
   for (int number : {deterrent::whitePins[0], deterrent::whitePins[1], deterrent::whitePins[2], deterrent::buzzerPin}) {
     const auto pin = static_cast<gpio_num_t>(number);
-    gpio_set_level(pin, 0);
+    gpio_set_level(pin, number == deterrent::buzzerPin);
     if (gpio_set_direction(pin, GPIO_MODE_OUTPUT) != ESP_OK) return false;
   }
   gpio_set_direction(GPIO_NUM_5, GPIO_MODE_INPUT);
@@ -195,6 +196,7 @@ bool initializeOutputs() {
   ledc_channel_config_t channel{};
   channel.gpio_num=deterrent::buzzerPin; channel.speed_mode=LEDC_LOW_SPEED_MODE;
   channel.channel=LEDC_CHANNEL_2; channel.timer_sel=LEDC_TIMER_1; channel.duty=0;
+  channel.flags.output_invert=1;  // duty 0 holds the pin high; the half-duty tone stays half duty
   if (ledc_channel_config(&channel) != ESP_OK) return false;
   hardwareReady = true;
   esp_timer_create_args_t args{}; args.callback=outputTick; args.name="trial_outputs";

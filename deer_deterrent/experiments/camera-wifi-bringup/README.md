@@ -4,7 +4,7 @@ This program captures QVGA JPEGs on the ESP32-S3, serves them over its local Wi-
 
 ## Hardware and build
 
-Use the assembled connections in [WIRING.md](../../WIRING.md). The RGB channels are GPIO13, GPIO36 and GPIO35; the passive buzzer is GPIO10; PIR OUT is GPIO5. The TFT is deselected with CS7 HIGH and backlight45 LOW because its SPI pins are used by the RGB module. GPIO21 remains enabled for the board rail. The camera pins are those of the assembled MVP wiring.
+Use the assembled connections in [WIRING.md](../../WIRING.md). The RGB channels are GPIO13, GPIO36 and GPIO35; the passive buzzer is GPIO10; PIR OUT is GPIO5. The buzzer module, marked low-level trigger, conducts while its input is low, so the program holds GPIO10 high whenever the buzzer is silent, setting it high at startup and writing full duty between tones; this has not been run on the unit. The TFT is deselected with CS7 HIGH and backlight45 LOW because its SPI pins are used by the RGB module. GPIO21 remains enabled for the board rail. The camera pins are those of the assembled MVP wiring.
 
 From this directory, build/upload with PlatformIO:
 
