@@ -16,8 +16,8 @@ Install PlatformIO. Place the repository below your Windows user profile; the he
 From `deer_deterrent/firmware/motion-size`:
 
 ```powershell
-.uild.ps1 -PioArgs @('-e','classifier_test')
-.uild.ps1 -PioArgs @('-e','classifier_test','-t','upload','--upload-port','COM5')
+.\build.ps1 -PioArgs @('-e','classifier_test')
+.\build.ps1 -PioArgs @('-e','classifier_test','-t','upload','--upload-port','COM5')
 ```
 
 Check the actual device port; COM5 is the last observed value, not a guaranteed assignment. Close serial monitors before upload. No reflash is required just to clear cooldown or recalibrate. The environment's legacy name does not select the old deer model. Current dependencies: espressif32 6.10.0, ESP-IDF 5.4.2, camera 2.1.3, ESP-DL 3.3.14 (JPEG helper), CMake 3.30.2.
@@ -41,7 +41,7 @@ Recorder output goes to `tools/captures/<timestamp>-<label>` (gitignored until d
 ## Camera-only diagnostic and restore
 
 ```powershell
-.uild.ps1 -PioArgs @('-e','camera_diagnostic','-t','upload','--upload-port','COM5')
+.\build.ps1 -PioArgs @('-e','camera_diagnostic','-t','upload','--upload-port','COM5')
 ```
 
 This repeatedly captures with white illumination, regardless of PIR, with buzzer silent. Repeated flashes in this mode are expected. CAMERA_TEST area=0 is a placeholder, not a detection result. Inspect images as well as decode status.
@@ -49,7 +49,7 @@ This repeatedly captures with white illumination, regardless of PIR, with buzzer
 Restore normal operation explicitly:
 
 ```powershell
-.uild.ps1 -PioArgs @('-e','classifier_test','-t','upload','--upload-port','COM5')
+.\build.ps1 -PioArgs @('-e','classifier_test','-t','upload','--upload-port','COM5')
 ```
 
 The [recognition trial program](../experiments/deer-classifier/README.md), the [laptop interface program](../experiments/camera-wifi-bringup/README.md) and the [night-controlled detector](../firmware/night-control/README.md) are separate firmware; uploading any of them replaces normal operation. Read the board's firmware back to a file first, as the recognition program's [board checks](../experiments/deer-classifier/BOARD_CHECKS.md) describe.
