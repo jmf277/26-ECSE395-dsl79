@@ -11,10 +11,8 @@ test_corrupt_jpeg (test_classifier_recording.RecordingTests.test_corrupt_jpeg) .
 test_duplicate_chunk (test_classifier_recording.RecordingTests.test_duplicate_chunk) ... ok
 test_duplicate_result_does_not_overwrite (test_classifier_recording.RecordingTests.test_duplicate_result_does_not_overwrite) ... ok
 test_exact_pair_and_preview (test_classifier_recording.RecordingTests.test_exact_pair_and_preview) ... ok
-test_firmware_injection_lines_parse (test_classifier_recording.RecordingTests.test_firmware_injection_lines_parse) ... ok
+test_firmware_output_test_lines_parse (test_classifier_recording.RecordingTests.test_firmware_output_test_lines_parse) ... ok
 test_gallery_draws_boxes_and_lists_trials (test_classifier_recording.RecordingTests.test_gallery_draws_boxes_and_lists_trials) ... ok
-test_injected_detection_is_recorded_apart_from_frames (test_classifier_recording.RecordingTests.test_injected_detection_is_recorded_apart_from_frames) ... ok
-test_injection_cancellation_and_missing_terminal (test_classifier_recording.RecordingTests.test_injection_cancellation_and_missing_terminal) ... ok
 test_invalid_input_contract (test_classifier_recording.RecordingTests.test_invalid_input_contract) ... ok
 test_invalid_json_and_limit (test_classifier_recording.RecordingTests.test_invalid_json_and_limit) ... ok
 test_jpeg_only_frame_is_complete_without_input (test_classifier_recording.RecordingTests.test_jpeg_only_frame_is_complete_without_input) ... ok
@@ -25,9 +23,8 @@ test_matching_checksum_does_not_make_invalid_jpeg_valid (test_classifier_recordi
 test_missing_end (test_classifier_recording.RecordingTests.test_missing_end) ... ok
 test_one_error_per_failed_transfer (test_classifier_recording.RecordingTests.test_one_error_per_failed_transfer) ... ok
 test_orphan_and_duplicate_output_events (test_classifier_recording.RecordingTests.test_orphan_and_duplicate_output_events) ... ok
-test_orphan_duplicate_and_malformed_injection_events (test_classifier_recording.RecordingTests.test_orphan_duplicate_and_malformed_injection_events) ... ok
 test_output_cancellation_and_missing_terminal (test_classifier_recording.RecordingTests.test_output_cancellation_and_missing_terminal) ... ok
-test_output_test_is_not_a_recognition_result (test_classifier_recording.RecordingTests.test_output_test_is_not_a_recognition_result) ... ok
+test_output_test_is_recorded_apart_from_frames (test_classifier_recording.RecordingTests.test_output_test_is_recorded_apart_from_frames) ... ok
 test_partial_line_and_reboot (test_classifier_recording.RecordingTests.test_partial_line_and_reboot) ... ok
 test_schema2_full_frame_pairs_picture_and_input (test_classifier_recording.RecordingTests.test_schema2_full_frame_pairs_picture_and_input) ... ok
 test_sdk_log_lines_are_diagnostics_not_errors (test_classifier_recording.RecordingTests.test_sdk_log_lines_are_diagnostics_not_errors) ... ok
@@ -50,6 +47,7 @@ test_armed_capture_confirms_on_the_second_deer_picture (test_laptop_classifier.M
 test_capture_waits_out_a_pause_instead_of_ending (test_laptop_classifier.MainLoopTests.test_capture_waits_out_a_pause_instead_of_ending) ... ok
 test_refused_capture_is_retried (test_laptop_classifier.MainLoopTests.test_refused_capture_is_retried) ... ok
 test_refused_request_releases_its_reply (test_laptop_classifier.MainLoopTests.test_refused_request_releases_its_reply) ... ok
+test_ten_seconds_without_a_good_poll_end_the_session (test_laptop_classifier.MainLoopTests.test_ten_seconds_without_a_good_poll_end_the_session) ... ok
 test_maximum_deer_box_is_the_score (test_laptop_classifier.PredictorTests.test_maximum_deer_box_is_the_score) ... ok
 test_no_box_is_a_zero_score (test_laptop_classifier.PredictorTests.test_no_box_is_a_zero_score) ... ok
 test_other_classes_and_bad_scores_are_refused (test_laptop_classifier.PredictorTests.test_other_classes_and_bad_scores_are_refused) ... ok
@@ -108,6 +106,6 @@ test_known_checksum_vector (test_transfer.PhotoTransferTests.test_known_checksum
 test_verified_transfer_preserves_bytes_and_metadata (test_transfer.PhotoTransferTests.test_verified_transfer_preserves_bytes_and_metadata) ... ok
 
 ----------------------------------------------------------------------
-Ran 107 tests in 8.854s
+Ran 105 tests in 9.980s
 
 OK
