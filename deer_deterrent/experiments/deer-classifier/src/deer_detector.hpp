@@ -19,7 +19,7 @@
 extern const uint8_t deer_model_data[] asm("_binary_deer_espdl_start");
 
 // Post-processing settings, written into every frame record.
-constexpr float kCandidateFloor = 0.10f;  // lowest box score kept
+constexpr float kCandidateFloor = 0.10f;  // configured box-score threshold
 constexpr float kNmsIou = 0.70f;          // IoU above which lower-ranked boxes are suppressed
 constexpr int kMaxBoxes = 10;             // boxes kept per frame
 
