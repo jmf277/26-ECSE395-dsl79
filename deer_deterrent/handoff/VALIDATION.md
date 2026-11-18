@@ -8,7 +8,7 @@
 - Runtime firmware source was not changed by this November 1 documentation pass; no reflash or hardware retest was performed.
 - Archived Arduino camera prototype was not rebuilt; its prior demo AP password is replaced by a sample value.
 - Current code and model attribution retained. Build/download caches and generated files excluded.
-- Battery operation is user-confirmed; runtime/current and outdoor performance are unmeasured here.
+- Battery operation is user-confirmed; on the MVP program the unit draws about 200 mA idle, 320 mA in a capture and 120 mA in the alarm, about 2 hours on the 450 mAh cell; outdoor performance is unmeasured here.
 
 When extracting the shared-drive ZIP, retain the directory structure. The full package includes original Lab 5 for historical links. See REPO_REVISION.txt in the ZIP for the exact committed snapshot.
 

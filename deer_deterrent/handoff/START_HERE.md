@@ -30,7 +30,7 @@ The last successful normal upload used PlatformIO environment `classifier_test` 
 - Size-only detection worked for some indoor surrogates, but persistent background changes near 5.5% caused repeated alarms.
 - Current growth gate rejected a stationary object around 16.3%, accepted an approaching object growing from 15.0% to 32.646%, and rejected a small visible object whose maximum was 7.458%.
 - These are single-scene indoor surrogate trials, not deer/bird accuracy statistics. A nearby small object can look large; a distant deer can look small.
-- User confirmed the complete setup operates on battery. Duration/current were not measured. Outdoor testing was planned to be self-documented; no outdoor results were supplied for this handoff.
+- User confirmed the complete setup operates on battery; on the MVP program it draws about 200 mA idle, 320 mA in a capture and 120 mA in the alarm, about 2 hours on the 450 mAh cell. Outdoors, on its battery, a person standing about 4 m away drew capture flashes and no alarm and a person walking up from about 3 m drew the alarm; outdoor accuracy against deer is not measured.
 - Earlier sound-and-light operation was confirmed by the user. The buzzer was later unplugged because jumpers ran out; the growth tests verify alarm commands/light behavior, not a newly verified audible buzzer.
 
 ## Quick start without changing code
