@@ -42,11 +42,16 @@ int main() {
   assert(gate.arm()&&gate.begin(6)&&gate.retain(15,0xfffffff0u)&&gate.retain(16,0xfffffff8u));
   gate.submit(6,15,true,10);assert(gate.submit(6,16,true,20).startAlarm);
   assert(gate.tick(21).tone&&!gate.tick(5520).tone);
+  // A later photo of the same burst cannot start a second response.
+  gate.cancel();assert(gate.arm()&&gate.begin(9)&&gate.retain(19,9000)&&gate.retain(20,9001)&&gate.retain(21,9002));
+  gate.submit(9,19,true,9003);assert(gate.submit(9,20,true,9004).startAlarm);
+  assert(!gate.tick(14600).tone&&!gate.active());
+  r=gate.submit(9,21,true,14700);assert(r.reply==Reply::Accepted&&r.present&&!r.startAlarm&&!gate.active());
   // A new burst starts with an empty history.
   gate.cancel();assert(gate.arm()&&gate.begin(7)&&gate.retain(17,100)&&gate.retain(18,100));
   assert(!gate.submit(7,17,true,101).present);
   gate.cancel();assert(gate.begin(8));
   for(unsigned i=1;i<=10;++i)assert(gate.retain(i,100));
   assert(!gate.retain(11,100)&&!gate.retain(1,100));
-  std::puts("PASS: two of the last three verdicts in capture order, skipped photos, armed/disarmed decisions, image/burst identity, expiry, idempotency, conflicts, finite waveform, cancellation, wraparound and retention limits");
+  std::puts("PASS: two of the last three verdicts in capture order, skipped photos, armed/disarmed decisions, one response per burst, image/burst identity, expiry, idempotency, conflicts, finite waveform, cancellation, wraparound and retention limits");
 }
