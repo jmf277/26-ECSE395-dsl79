@@ -29,4 +29,4 @@ Full chronology, partial-recording caveats and earlier numeric results are prese
 
 ## Power and outdoor evidence status
 
-User confirmed complete battery-only operation in conversation. No host recording can prove the offline segment; on the MVP program the unit draws about 200 mA idle, 320 mA in a capture and 120 mA in the alarm, about 2 hours on the 450 mAh cell. Outdoors, on its battery, a person standing about 4 m away drew capture flashes and no alarm and a person walking up from about 3 m drew the alarm; no field accuracy against deer is claimed. Use [the log template](../handoff/OUTDOOR_TEST_LOG.csv) for further outdoor runs.
+User confirmed complete battery-only operation in conversation. No host recording can prove the offline segment. On the MVP program the unit draws about 200 mA idle, 320 mA in a capture and 120 mA in the alarm, about 2 hours on the 450 mAh cell. Outdoors, on its battery, a person standing about 4 m away drew capture flashes and no alarm and a person walking up from about 3 m drew the alarm; no field accuracy against deer is claimed. Use [the log template](../handoff/OUTDOOR_TEST_LOG.csv) for further outdoor runs.
