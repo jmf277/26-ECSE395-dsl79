@@ -1,0 +1,1990 @@
+[
+{
+"file": "5d971cc3a0955eff-trial-000001-frame-000001",
+"rec_score": 0.11920291930437088,
+"computed_score": 0.11920292202211755,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.119203,
+[
+202,
+102,
+239,
+152
+]
+]
+],
+"computed_boxes": [
+[
+0.119203,
+[
+202,
+102,
+239,
+152
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000001",
+"rec_score": 0.22270013391971588,
+"computed_score": 0.22270013882530884,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.2227,
+[
+226,
+212,
+277,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.2227,
+[
+226,
+212,
+277,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000002",
+"rec_score": 0.22270013391971588,
+"computed_score": 0.22270013882530884,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.2227,
+[
+227,
+213,
+277,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.2227,
+[
+227,
+213,
+277,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000003",
+"rec_score": 0.2689414322376251,
+"computed_score": 0.2689414213699951,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.268941,
+[
+225,
+212,
+275,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.268941,
+[
+225,
+212,
+275,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000004",
+"rec_score": 0.14804720878601074,
+"computed_score": 0.14804719803168948,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.148047,
+[
+226,
+212,
+276,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.148047,
+[
+226,
+212,
+276,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000005",
+"rec_score": 0.2689414322376251,
+"computed_score": 0.2689414213699951,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.268941,
+[
+223,
+209,
+277,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.268941,
+[
+223,
+209,
+277,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000006",
+"rec_score": 0.32082128524780273,
+"computed_score": 0.320821300824607,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.320821,
+[
+224,
+210,
+277,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.320821,
+[
+224,
+210,
+277,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000007",
+"rec_score": 0.18242552876472473,
+"computed_score": 0.18242552380635635,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+225,
+212,
+277,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+225,
+212,
+277,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000008",
+"rec_score": 0.22270013391971588,
+"computed_score": 0.22270013882530884,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.2227,
+[
+225,
+212,
+276,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.2227,
+[
+225,
+212,
+276,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000009",
+"rec_score": 0.18242552876472473,
+"computed_score": 0.18242552380635635,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+225,
+209,
+276,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+225,
+209,
+276,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000001-frame-000010",
+"rec_score": 0.18242552876472473,
+"computed_score": 0.18242552380635635,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+225,
+212,
+276,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+225,
+212,
+276,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000011",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+229,
+217,
+271,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+229,
+217,
+271,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000012",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+228,
+217,
+270,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+228,
+217,
+270,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000013",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+229,
+217,
+271,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+229,
+217,
+271,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000014",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000015",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000016",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+230,
+217,
+270,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+230,
+217,
+270,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000017",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000018",
+"rec_score": 0.11920291930437088,
+"computed_score": 0.11920292202211755,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.119203,
+[
+229,
+217,
+269,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.119203,
+[
+229,
+217,
+269,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000019",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000002-frame-000020",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000021",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+138,
+34,
+185,
+88
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+138,
+34,
+185,
+88
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000022",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+140,
+35,
+187,
+92
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+140,
+35,
+187,
+92
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000023",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000024",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000025",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000026",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000027",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000028",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000029",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000003-frame-000030",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000031",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000032",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+230,
+213,
+280,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+230,
+213,
+280,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000033",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000034",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000035",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000036",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000037",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000038",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000039",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000004-frame-000040",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000041",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000042",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000043",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000044",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000045",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000046",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000047",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000048",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000049",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000005-frame-000050",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000051",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.119203,
+[
+212,
+212,
+266,
+237
+]
+],
+[
+0.2227,
+[
+218,
+212,
+273,
+239
+]
+],
+[
+0.5,
+[
+218,
+209,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.119203,
+[
+212,
+212,
+266,
+237
+]
+],
+[
+0.2227,
+[
+218,
+212,
+273,
+239
+]
+],
+[
+0.5,
+[
+218,
+209,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000052",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+219,
+213,
+275,
+239
+]
+],
+[
+0.5,
+[
+217,
+209,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+219,
+213,
+275,
+239
+]
+],
+[
+0.5,
+[
+217,
+209,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000053",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+218,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+219,
+210,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+218,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+219,
+210,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000054",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.148047,
+[
+212,
+211,
+267,
+237
+]
+],
+[
+0.182426,
+[
+217,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+217,
+208,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.148047,
+[
+212,
+211,
+267,
+237
+]
+],
+[
+0.182426,
+[
+217,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+217,
+208,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000055",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.148047,
+[
+212,
+212,
+267,
+237
+]
+],
+[
+0.2227,
+[
+218,
+212,
+273,
+239
+]
+],
+[
+0.5,
+[
+218,
+208,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.148047,
+[
+212,
+212,
+267,
+237
+]
+],
+[
+0.2227,
+[
+218,
+212,
+273,
+239
+]
+],
+[
+0.5,
+[
+218,
+208,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000056",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.148047,
+[
+219,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+218,
+209,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.148047,
+[
+219,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+218,
+209,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000057",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000058",
+"rec_score": 0.11920291930437088,
+"computed_score": 0.11920292202211755,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+146,
+99,
+229,
+171
+]
+],
+[
+0.095349,
+[
+159,
+104,
+223,
+151
+]
+],
+[
+0.095349,
+[
+170,
+102,
+227,
+142
+]
+],
+[
+0.119203,
+[
+159,
+92,
+225,
+143
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+146,
+99,
+229,
+171
+]
+],
+[
+0.095349,
+[
+159,
+104,
+223,
+151
+]
+],
+[
+0.095349,
+[
+170,
+102,
+227,
+142
+]
+],
+[
+0.119203,
+[
+159,
+92,
+225,
+143
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000059",
+"rec_score": 0.11920291930437088,
+"computed_score": 0.11920292202211755,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.119203,
+[
+230,
+218,
+274,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.119203,
+[
+230,
+218,
+274,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000060",
+"rec_score": 0.0953494682908058,
+"computed_score": 0.09534946489910949,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+169,
+101,
+227,
+142
+]
+],
+[
+0.095349,
+[
+230,
+218,
+275,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+169,
+101,
+227,
+142
+]
+],
+[
+0.095349,
+[
+230,
+218,
+275,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000061",
+"rec_score": 0.11920291930437088,
+"computed_score": 0.11920292202211755,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+169,
+101,
+227,
+141
+]
+],
+[
+0.119203,
+[
+229,
+218,
+273,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+169,
+101,
+227,
+141
+]
+],
+[
+0.119203,
+[
+229,
+218,
+273,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000062",
+"rec_score": 0.14804720878601074,
+"computed_score": 0.14804719803168948,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+160,
+104,
+222,
+146
+]
+],
+[
+0.119203,
+[
+160,
+92,
+225,
+142
+]
+],
+[
+0.148047,
+[
+168,
+101,
+226,
+141
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+160,
+104,
+222,
+146
+]
+],
+[
+0.119203,
+[
+160,
+92,
+225,
+142
+]
+],
+[
+0.148047,
+[
+168,
+101,
+226,
+141
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000063",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+218,
+212,
+273,
+239
+]
+],
+[
+0.5,
+[
+218,
+209,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+218,
+212,
+273,
+239
+]
+],
+[
+0.5,
+[
+218,
+209,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000064",
+"rec_score": 0.43782350420951843,
+"computed_score": 0.43782349911420193,
+"score_match": true,
+"box_match": false,
+"rec_boxes": [
+[
+0.182426,
+[
+219,
+213,
+275,
+239
+]
+],
+[
+0.437824,
+[
+219,
+209,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+219,
+213,
+275,
+239
+]
+],
+[
+0.437823,
+[
+219,
+209,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000065",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+219,
+211,
+272,
+239
+]
+],
+[
+0.5,
+[
+218,
+208,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+219,
+211,
+272,
+239
+]
+],
+[
+0.5,
+[
+218,
+208,
+272,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000066",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+218,
+213,
+275,
+239
+]
+],
+[
+0.5,
+[
+217,
+209,
+273,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+218,
+213,
+275,
+239
+]
+],
+[
+0.5,
+[
+217,
+209,
+273,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000067",
+"rec_score": 0.43782350420951843,
+"computed_score": 0.43782349911420193,
+"score_match": true,
+"box_match": false,
+"rec_boxes": [
+[
+0.148047,
+[
+212,
+211,
+267,
+237
+]
+],
+[
+0.148047,
+[
+218,
+212,
+277,
+239
+]
+],
+[
+0.437824,
+[
+218,
+209,
+274,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.148047,
+[
+212,
+211,
+267,
+237
+]
+],
+[
+0.148047,
+[
+218,
+212,
+277,
+239
+]
+],
+[
+0.437823,
+[
+218,
+209,
+274,
+239
+]
+]
+]
+},
+{
+"file": "a60fdd6cc327c384-trial-000006-frame-000068",
+"rec_score": 0.5,
+"computed_score": 0.5,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.182426,
+[
+218,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+217,
+210,
+272,
+239
+]
+]
+],
+"computed_boxes": [
+[
+0.182426,
+[
+218,
+212,
+272,
+239
+]
+],
+[
+0.5,
+[
+217,
+210,
+272,
+239
+]
+]
+]
+},
+{
+"file": "0853ec65d115bc4b-trial-000001-frame-000001",
+"rec_score": 0.11920291930437088,
+"computed_score": 0.11920292202211755,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.119203,
+[
+212,
+208,
+249,
+235
+]
+]
+],
+"computed_boxes": [
+[
+0.119203,
+[
+212,
+208,
+249,
+235
+]
+]
+]
+},
+{
+"file": "a0897212abe4e05a-trial-000001-frame-000001",
+"rec_score": 0,
+"computed_score": 0.0,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [],
+"computed_boxes": []
+},
+{
+"file": "3a2ec9b00323c3bf-trial-000001-frame-000001",
+"rec_score": 0.11920291930437088,
+"computed_score": 0.11920292202211755,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.119203,
+[
+245,
+220,
+292,
+238
+]
+]
+],
+"computed_boxes": [
+[
+0.119203,
+[
+245,
+220,
+292,
+238
+]
+]
+]
+},
+{
+"file": "9915b5513fff1bba-trial-000001-frame-000001",
+"rec_score": 0.3775406777858734,
+"computed_score": 0.3775406687981454,
+"score_match": true,
+"box_match": true,
+"rec_boxes": [
+[
+0.095349,
+[
+210,
+214,
+269,
+239
+]
+],
+[
+0.119203,
+[
+201,
+209,
+255,
+237
+]
+],
+[
+0.182426,
+[
+217,
+216,
+269,
+237
+]
+],
+[
+0.377541,
+[
+210,
+210,
+265,
+237
+]
+]
+],
+"computed_boxes": [
+[
+0.095349,
+[
+210,
+214,
+269,
+239
+]
+],
+[
+0.119203,
+[
+201,
+209,
+255,
+237
+]
+],
+[
+0.182426,
+[
+217,
+216,
+269,
+237
+]
+],
+[
+0.377541,
+[
+210,
+210,
+265,
+237
+]
+]
+]
+},
+{
+"file": "ce64d908d72d4e07-trial-000001-frame-000001",
+"rec_score": 0.43782350420951843,
+"computed_score": 0.43782349911420193,
+"score_match": true,
+"box_match": false,
+"rec_boxes": [
+[
+0.119203,
+[
+231,
+216,
+282,
+239
+]
+],
+[
+0.148047,
+[
+152,
+85,
+207,
+147
+]
+],
+[
+0.182426,
+[
+239,
+216,
+282,
+238
+]
+],
+[
+0.437824,
+[
+228,
+211,
+278,
+238
+]
+]
+],
+"computed_boxes": [
+[
+0.119203,
+[
+231,
+216,
+282,
+239
+]
+],
+[
+0.148047,
+[
+152,
+85,
+207,
+147
+]
+],
+[
+0.182426,
+[
+239,
+216,
+282,
+238
+]
+],
+[
+0.437823,
+[
+228,
+211,
+278,
+238
+]
+]
+]
+}
+]

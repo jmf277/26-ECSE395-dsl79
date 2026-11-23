@@ -5,8 +5,16 @@
       "path": "firmware/motion-size"
     },
     {
-      "name": "Earlier classifier",
+      "name": "Recognition trial program",
       "path": "experiments/deer-classifier"
+    },
+    {
+      "name": "Laptop interface program",
+      "path": "experiments/camera-wifi-bringup"
+    },
+    {
+      "name": "Night-controlled detector",
+      "path": "firmware/night-control"
     },
     {
       "name": "Tests and handoff",

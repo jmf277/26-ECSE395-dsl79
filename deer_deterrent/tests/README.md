@@ -1,6 +1,6 @@
 # Test evidence: current results and historical experiments
 
-Open [index.html](index.html) locally after downloading/cloning to browse every saved session. Dates in filenames retain the original recorded labels. Do not treat successive frames as independent accuracy trials.
+Open [index.html](index.html) locally after downloading/cloning to browse the detector's saved sessions under `captures`; each recorded recognition session under `recognition` has its own gallery. Dates in filenames retain the original recorded labels. Do not treat successive frames as independent accuracy trials.
 
 ## Current 10% + growth firmware (October 31)
 
@@ -20,8 +20,14 @@ No device/transport errors in these runs. The first small-change run reached onl
 - [Camera diagnostic](captures/20261031-180337-326915-d12-camera-diagnostic/index.html): eight checksum-verified images; normal firmware was subsequently restored. CAMERA_TEST area=0 is a placeholder, not a detector measurement.
 - [Approach startup](captures/20261031-183354-551487-approach-10-percent-startup/index.html): embedded tests PASS, seven saved photos, calibration completed.
 
-Full chronology, partial-recording caveats and earlier numeric results are preserved in [HISTORY.md](HISTORY.md). Earlier thresholds/firmware descriptions there are historical. Camera movement requires a new reference. No matched flash-off comparison quantifies illumination gain.
+Full chronology, partial-recording caveats and earlier numeric results are preserved in [HISTORY.md](HISTORY.md). Earlier thresholds/firmware descriptions there are historical. Camera movement requires a new reference. At 5 in the capture light makes a white patch about 3 to 4 in across that washes out what lies under it, while a room 2 to 3 m away looks the same with it on and off.
+
+## Recorded recognition trials and replay
+
+- [Recorded recognition trials](recognition/README.md): the recognition trial program's sessions of November 4, each with its pictures, exact model inputs, records and gallery, and the three flash images that made them.
+- [Analysis of the recorded recognition trials](recognition_analysis/README.md): the trial program's model run on a computer on those sessions' saved model inputs, checked against the board's records of them, and on edited copies and other pictures, with the scripts and their results.
+- [Replay of the detector records](replay_verification/README.md): the saved detector sessions under `captures` replayed through the growth gate's own source.
 
 ## Power and outdoor evidence status
 
-User confirmed complete battery-only operation in conversation. No host recording can prove the offline segment, and no measured current/runtime was provided. Outdoor work was to be self-documented; no observations or field accuracy claims have been added. Use [the log template](../handoff/OUTDOOR_TEST_LOG.csv) when those results arrive.
+User confirmed complete battery-only operation in conversation. No host recording can prove the offline segment. On the MVP program the unit draws about 200 mA idle, 320 mA in a capture and 120 mA in the alarm, about 2 hours on the 450 mAh cell. Outdoors, on its battery, a person standing about 4 m away drew capture flashes and no alarm and a person walking up from about 3 m drew the alarm; no field accuracy against deer is claimed. Use [the log template](../handoff/OUTDOOR_TEST_LOG.csv) for further outdoor runs.

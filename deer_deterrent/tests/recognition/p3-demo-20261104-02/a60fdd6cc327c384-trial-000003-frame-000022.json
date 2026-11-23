@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "boot": "a60fdd6cc327c384",
+  "trial": 3,
+  "frame": 22,
+  "within": 2,
+  "trigger": "pir",
+  "model_sha256": "f4baa40014b3b5476e05e5007ab6e83a1a19bdc680c12dba86761841e02fc450",
+  "valid": true,
+  "committed": true,
+  "present": false,
+  "armed": true,
+  "alarm_started": false,
+  "threshold": 0.850000023841858,
+  "window": 3,
+  "required": 2,
+  "score": 0.0953494682908058,
+  "error": "",
+  "lighting": "white",
+  "capture_lighting_ok": true,
+  "light_settle_ms": 120,
+  "discarded_frames_required": 2,
+  "jpeg_bytes": 6738,
+  "camera_width": 320,
+  "camera_height": 240,
+  "input_bytes": 150528,
+  "input_dtype": "int8",
+  "input_layout": "NHWC",
+  "input_shape": [
+    1,
+    224,
+    224,
+    3
+  ],
+  "input_exponent": -7,
+  "input_scaling": "real = signed_byte * 2**input_exponent; RGB normalization /255; letterbox 114",
+  "started_us": 786378110,
+  "acquired_us": 786656679,
+  "inferred_us": 787081746,
+  "capture_us": 278569,
+  "decode_us": 26782,
+  "preprocessing_us": 18251,
+  "input_copy_us": 16380,
+  "model_us": 362845,
+  "postprocessing_us": 756,
+  "box_coordinates": "left,top,right,bottom in original camera image pixels",
+  "boxes": [
+    {
+      "category": 0,
+      "score": 0.0953494682908058,
+      "box": [
+        140,
+        35,
+        187,
+        92
+      ]
+    }
+  ]
+}

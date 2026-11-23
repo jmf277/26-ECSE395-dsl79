@@ -1,0 +1,11 @@
+weights 348752 biases 5103 parameters 353855 ; weights exactly zero 14804 0.0424
+mean |weight| in steps: median over layers 14.8  largest |weight| by layer: min 64 median 88.0
+layers with smallest mean |w|: [('/model.23/cv2.2/cv2.2.0/pointwise/Conv', (1, 1, 128, 16), -6, 66, 3.8, 0.365), ('/model.23/cv2.1/cv2.1.0/pointwise/Conv', (1, 1, 128, 16), -6, 67, 4.5, 0.221), ('/model.23/cv2.1/cv2.1.1/depthwise/Conv', (3, 3, 16), -6, 64, 6.5, 0.208), ('/model.4/cv1/conv/Conv', (1, 1, 64, 64), -6, 69, 6.7, 0.09), ('/model.22/cv2/conv/Conv', (1, 1, 64, 128), -6, 86, 6.9, 0.118), ('/model.22/m.0/cv2/pointwise/Conv', (1, 1, 64, 64), -6, 75, 7.0, 0.115)]
+frame: decimal-arithmetic max logit per head {6: [-1.5604033103719241, -3.9984344371530804, -13.984919657480454], 18: [-1.8623951952647257, -4.185892063922304, -11.52308859070243], 22: [-3.108759057339751, -5.179805985561202, -13.57285931995493], 32: [-1.890306170607379, -2.469332281045483, -13.600415245900354], 50: [-2.953510297463826, -4.323315997341413, -11.998936929867945], 56: [0.17185326013490387, -3.5429761883793107, -13.105640479866603], 62: [-2.3273637777032703, -3.555605783809032, -13.435113509148525]}
+6 head0 base -1.56 noisy mean -2.0 spread 0.41 | head1 -4.0 -4.18 | head2 -13.98 -13.2
+18 head0 base -1.86 noisy mean -2.02 spread 0.4 | head1 -4.19 -4.25 | head2 -11.52 -12.25
+22 head0 base -3.11 noisy mean -3.11 spread 0.45 | head1 -5.18 -4.91 | head2 -13.57 -13.55
+32 head0 base -1.89 noisy mean -2.06 spread 0.27 | head1 -2.47 -2.95 | head2 -13.6 -13.59
+50 head0 base -2.95 noisy mean -3.45 spread 0.78 | head1 -4.32 -4.11 | head2 -12.0 -12.0
+56 head0 base 0.17 noisy mean 0.04 spread 0.16 | head1 -3.54 -3.83 | head2 -13.11 -13.56
+62 head0 base -2.33 noisy mean -2.55 spread 0.36 | head1 -3.56 -3.27 | head2 -13.44 -13.46

@@ -1,0 +1,74 @@
+{
+  "stem": "a60fdd6cc327c384-trial-000003-frame-000026",
+  "result": {
+    "schema": 1,
+    "boot": "a60fdd6cc327c384",
+    "trial": 3,
+    "frame": 26,
+    "within": 6,
+    "trigger": "pir",
+    "model_sha256": "f4baa40014b3b5476e05e5007ab6e83a1a19bdc680c12dba86761841e02fc450",
+    "valid": true,
+    "committed": true,
+    "present": false,
+    "armed": true,
+    "alarm_started": false,
+    "threshold": 0.850000023841858,
+    "window": 3,
+    "required": 2,
+    "score": 0,
+    "error": "",
+    "lighting": "white",
+    "capture_lighting_ok": true,
+    "light_settle_ms": 120,
+    "discarded_frames_required": 2,
+    "jpeg_bytes": 6797,
+    "camera_width": 320,
+    "camera_height": 240,
+    "input_bytes": 150528,
+    "input_dtype": "int8",
+    "input_layout": "NHWC",
+    "input_shape": [
+      1,
+      224,
+      224,
+      3
+    ],
+    "input_exponent": -7,
+    "input_scaling": "real = signed_byte * 2**input_exponent; RGB normalization /255; letterbox 114",
+    "started_us": 794848165,
+    "acquired_us": 795125180,
+    "inferred_us": 795550378,
+    "capture_us": 277015,
+    "decode_us": 26883,
+    "preprocessing_us": 18269,
+    "input_copy_us": 16243,
+    "model_us": 363159,
+    "postprocessing_us": 592,
+    "box_coordinates": "left,top,right,bottom in original camera image pixels",
+    "boxes": []
+  },
+  "artifacts": {
+    "jpeg": {
+      "file": "a60fdd6cc327c384-trial-000003-frame-000026.jpg",
+      "bytes": 6797,
+      "fnv1a": "01a7d44e",
+      "sha256": "554e4b86d59f00c0757a9fcfa9741d67e4b0eb71c27b00fdd05c781e65f7a028"
+    },
+    "input": {
+      "file": "a60fdd6cc327c384-trial-000003-frame-000026.input.i8",
+      "bytes": 150528,
+      "fnv1a": "4f61df16",
+      "sha256": "6886e04183dabcca4f6395df7c0647a79827547463085ef90ec2848b9df95a68"
+    }
+  },
+  "ended": true,
+  "complete": true,
+  "ending": {
+    "boot": "a60fdd6cc327c384",
+    "trial": 3,
+    "frame": 26,
+    "transfer_complete": true,
+    "transfer_us": 888918
+  }
+}

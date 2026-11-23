@@ -1,0 +1,3 @@
+# Recorded data: compare and store as bytes, never as text lines.
+*.i8 binary
+*.raw binary

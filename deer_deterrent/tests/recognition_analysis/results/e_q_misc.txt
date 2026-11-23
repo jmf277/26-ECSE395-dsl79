@@ -1,0 +1,14 @@
+all 69 boxes: width camera px 37 54.0 83 = share of frame width 0.116 0.169 0.259 ; height 18 27.0 72
+head 0 stride 8 cells 28 exponent -2 step 0.25 floor q -9 floor score 0.0953 first >=0.85: q 7 score 0.852
+head 1 stride 16 cells 14 exponent -1 step 0.5 floor q -4 floor score 0.1192 first >=0.85: q 4 score 0.8808
+head 2 stride 32 cells 7 exponent -1 step 0.5 floor q -4 floor score 0.1192 first >=0.85: q 4 score 0.8808
+box exponents [-4, -4, -4] input exponent -7
+full non-zero 32 odd k (finest head only) 12 even k 20 [-9, -8, -7, -6, -5, -4, -3, -2]
+close non-zero 20 odd k (finest head only) 12 even k 8 [-9, -8, -7, -6, -5]
+best .25: recall 0.3385 fpr 0.1647 LR+ 2.06 precision if deer and non-deer equally common 0.673
+last .25: recall 0.352 fpr 0.1059 LR+ 3.32 precision if equal 0.769
+frame s08 picture-area mean RGB [24.6 14.4 32. ] gains [0.96 1.65 0.74]
+as saved [(0.438, [230, 213, 278, 238]), (0.223, [239, 217, 281, 238])]
+gray-world balanced [(0.378, [228, 209, 278, 238])]
+balanced, brighter x1.5 [(0.438, [226, 212, 279, 239]), (0.095, [237, 211, 285, 238])]
+balanced, brighter, light painted out []

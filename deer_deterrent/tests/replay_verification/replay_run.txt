@@ -1,0 +1,3 @@
+24 sessions; 175 photos verified; 45 frames replayed; 0 mismatches.
+SDK E diagnostics: 21; application error messages: 0; integrity errors: 0; warnings: 6.
+These are recording/replay checks, not independent accuracy trials or physical output measurements.

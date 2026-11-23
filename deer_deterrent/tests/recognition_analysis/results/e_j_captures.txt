@@ -1,0 +1,23 @@
+20261029-162522-225761-initial-check             n 12 max 0.182 mean 0.041 >=.25 0 >=.5 0 head1max 0.029 head2max 1e-05
+20261029-162748-872374-default-view              n 10 max 0.0 mean 0.0 >=.25 0 >=.5 0 head1max 0.011 head2max 1.7e-05
+20261029-162902-877406-small-phone               n 12 max 0.0 mean 0.0 >=.25 0 >=.5 0 head1max 0.018 head2max 1.7e-05
+20261029-163019-306672-large-person              n 12 max 0.148 mean 0.012 >=.25 0 >=.5 0 head1max 0.029 head2max 1e-05
+20261029-163653-891180-deterrent-startup         n 2 max 0.0 mean 0.0 >=.25 0 >=.5 0 head1max 0.018 head2max 2e-06
+20261029-163821-275152-deterrent-reference       n 13 max 0.095 mean 0.007 >=.25 0 >=.5 0 head1max 0.018 head2max 4e-06
+20261029-164009-749997-phone-deterrent           n 3 max 0.0 mean 0.0 >=.25 0 >=.5 0 head1max 0.029 head2max 2e-06
+20261029-164408-046795-five-percent-live         n 4 max 0.0 mean 0.0 >=.25 0 >=.5 0 head1max 0.029 head2max 2e-06
+20261029-164554-843353-person-five-percent       n 3 max 0.0 mean 0.0 >=.25 0 >=.5 0 head1max 0.029 head2max 2e-06
+20261029-180609-968612-display-startup           n 2 max 0.321 mean 0.321 >=.25 2 >=.5 0 head1max 0.047 head2max 4e-06
+20261031-163435-551083-final-rgb-startup         n 6 max 0.119 mean 0.091 >=.25 0 >=.5 0 head1max 0.076 head2max 4e-06
+20261031-163535-273574-final-rgb-large-target    n 14 max 0.269 mean 0.131 >=.25 1 >=.5 0 head1max 0.182 head2max 6e-06
+20261031-180337-326915-d12-camera-diagnostic     n 8 max 0.223 mean 0.077 >=.25 0 >=.5 0 head1max 0.047 head2max 6e-06
+20261031-182221-565944-rearmed-live-test         n 10 max 0.182 mean 0.045 >=.25 0 >=.5 0 head1max 0.011 head2max 6e-06
+20261031-182520-584322-large-target-recorded-rep n 12 max 0.148 mean 0.076 >=.25 0 >=.5 0 head1max 0.047 head2max 6e-06
+20261031-183354-551487-approach-10-percent-start n 7 max 0.095 mean 0.014 >=.25 0 >=.5 0 head1max 0.011 head2max 6e-06
+20261031-183457-917906-stationary-no-approach    n 10 max 0.095 mean 0.019 >=.25 0 >=.5 0 head1max 0.029 head2max 2e-06
+20261031-183551-894064-approaching-growth-test   n 15 max 0.119 mean 0.033 >=.25 0 >=.5 0 head1max 0.047 head2max 1e-05
+20261031-183651-967957-small-target-growth-rule  n 10 max 0.0 mean 0.0 >=.25 0 >=.5 0 head1max 0.011 head2max 6e-06
+20261031-183751-692936-centered-small-target-rep n 10 max 0.438 mean 0.182 >=.25 4 >=.5 0 head1max 0.076 head2max 6e-06
+total 175 max 0.43782349911420193 >=.25 7 >=.5 0 >=.85 0 any box 54
+stage counter {0: 53, 1: 1, 2: 0, None: 121} head1 max 0.18242552380635635 head2 max 1.670142184809518e-05
+(1280, 720)

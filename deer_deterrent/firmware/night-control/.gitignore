@@ -1,0 +1,9 @@
+.pio/
+build/
+build-diagnostic/
+managed_components/
+sdkconfig
+sdkconfig.old
+sdkconfig.classifier_test*
+sdkconfig.camera_diagnostic*
+__pycache__/

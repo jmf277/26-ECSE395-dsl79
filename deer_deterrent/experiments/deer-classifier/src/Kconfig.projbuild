@@ -1,4 +1,4 @@
-menu "Deer camera smoke test"
+menu "Deer recorded trials"
 
 config DEER_PINS_CONFIRMED
     bool "I have entered and checked my actual OV5640 DVP wiring"

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "frames": 0,
+  "complete_valid_pairs": 0,
+  "invalid_inferences": 0,
+  "incomplete_frames": 0,
+  "output_tests_started": 0,
+  "output_tests_completed": 0,
+  "output_tests_cancelled": 0,
+  "output_tests_incomplete": 0,
+  "errors": [
+    "device: E (2185) camera: Detected camera not supported.",
+    "device: E (2185) camera: Camera probe failed with error 0x106(ESP_ERR_NOT_SUPPORTED)",
+    "device: E (2185) gdma: gdma_disconnect(309): no peripheral is connected to the channel",
+    "device: ERROR camera_init"
+  ],
+  "scope": "Image/input transfer and reported inference/commands; not physical-output verification or recognition accuracy."
+}

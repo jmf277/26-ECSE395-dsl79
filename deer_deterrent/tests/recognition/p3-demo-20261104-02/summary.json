@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "frames": 68,
+  "complete_valid_pairs": 68,
+  "invalid_inferences": 0,
+  "incomplete_frames": 0,
+  "output_tests_started": 1,
+  "output_tests_completed": 1,
+  "output_tests_cancelled": 0,
+  "output_tests_incomplete": 0,
+  "errors": [],
+  "scope": "Image/input transfer and reported inference/commands; not physical-output verification or recognition accuracy."
+}
